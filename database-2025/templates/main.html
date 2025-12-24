@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="ko">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>맛집 DB</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+    
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Jua', sans-serif;
+      background-color: #f8f9fa;
+    }
+    
+    html {
+      height: 100%;
+    }
+    
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* 상단바 */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background-color: #ffffff;
+      border-bottom: 2px solid #f0f0f0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .app-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2d3436;
+      margin: 0;
+    }
+    
+    .top-icons {
+      display: flex;
+      gap: 16px;
+    }
+    
+    .icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      transition: transform 0.2s;
+    }
+    
+    .icon-btn:hover {
+      transform: scale(1.1);
+    }
+    
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+    
+    /* 메인 컨텐츠 */
+    .main-content {
+      flex: 1;
+      padding: 24px 20px 100px 20px;
+      overflow-y: auto;
+    }
+    
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .category-card {
+      background-color: #ffffff;
+      border: 2px solid #e9ecef;
+      border-radius: 16px;
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .category-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 16px rgba(0, 210, 190, 0.2);
+      border-color: #00d2be;
+    }
+    
+    .category-card:active {
+      transform: translateY(-2px);
+    }
+    
+    .category-icon {
+      font-size: 48px;
+    }
+    
+    .category-name {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2d3436;
+      text-align: center;
+    }
+    
+    /* 하단바 */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background-color: #ffffff;
+      border-top: 2px solid #f0f0f0;
+      padding: 12px 0;
+      display: flex;
+      justify-content: space-around;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px 16px;
+      transition: all 0.2s;
+      color: #6c757d;
+    }
+    
+    .nav-btn:hover {
+      color: #00d2be;
+      transform: translateY(-2px);
+    }
+    
+    .nav-btn.active {
+      color: #00d2be;
+    }
+    
+    .nav-icon {
+      font-size: 24px;
+    }
+    
+    .nav-text {
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    @media (max-width: 480px) {
+      .category-grid {
+        gap: 12px;
+      }
+      
+      .category-card {
+        padding: 16px 8px;
+      }
+      
+      .category-icon {
+        font-size: 40px;
+      }
+      
+      .category-name {
+        font-size: 14px;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="app-container"><!-- 상단바 -->
+   <header class="top-bar">
+    <h1 class="app-title" id="appTitle">맛집 DB</h1>
+    <div class="top-icons"><button class="icon-btn" id="favoriteBtn" aria-label="찜">
+      <svg width="28" height="28" viewbox="0 0 24 24" fill="none" stroke="#2d3436" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+      </svg></button> <button class="icon-btn" id="cartBtn" aria-label="장바구니">
+      <svg width="28" height="28" viewbox="0 0 24 24" fill="none" stroke="#2d3436" stroke-width="2"><circle cx="9" cy="21" r="1"></circle> <circle cx="20" cy="21" r="1"></circle> <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+      </svg></button>
+    </div>
+   </header><!-- 메인 컨텐츠 -->
+   <main class="main-content">
+    <div class="category-grid"><button class="category-card" data-category="korean">
+      <div class="category-icon">
+       🍚
+      </div>
+      <div class="category-name" id="koreanFood">
+       한식
+      </div></button> <button class="category-card" data-category="japanese">
+      <div class="category-icon">
+       🍣
+      </div>
+      <div class="category-name" id="japaneseFood">
+       일식
+      </div></button> <button class="category-card" data-category="chinese">
+      <div class="category-icon">
+       🥟
+      </div>
+      <div class="category-name" id="chineseFood">
+       중식
+      </div></button> <button class="category-card" data-category="western">
+      <div class="category-icon">
+       🍝
+      </div>
+      <div class="category-name" id="westernFood">
+       양식
+      </div></button> <button class="category-card" data-category="snack">
+      <div class="category-icon">
+       🍜
+      </div>
+      <div class="category-name" id="snackFood">
+       분식
+      </div></button> <button class="category-card" data-category="fastfood">
+      <div class="category-icon">
+       🍔
+      </div>
+      <div class="category-name" id="fastFood">
+       패스트푸드
+      </div></button>
+    </div>
+   </main><!-- 하단바 -->
+   <nav class="bottom-bar"><button class="nav-btn" id="ordersBtn">
+     <div class="nav-icon">
+      📋
+     </div>
+     <div class="nav-text" id="navOrders">
+      주문내역
+     </div></button> <button class="nav-btn active" id="homeBtn">
+     <div class="nav-icon">
+      🏠
+     </div>
+     <div class="nav-text" id="navHome">
+      홈
+     </div></button> <button class="nav-btn" id="settingsBtn">
+     <div class="nav-icon">
+      ⚙️
+     </div>
+     <div class="nav-text" id="navSettings">
+      설정
+     </div></button>
+   </nav>
+  </div>
+  <script>
+    const defaultConfig = {
+      background_color: '#ffffff',
+      primary_color: '#00d2be',
+      text_color: '#2d3436',
+      card_border_color: '#e9ecef',
+      app_name: '맛집 DB',
+      korean_food: '한식',
+      japanese_food: '일식',
+      chinese_food: '중식',
+      western_food: '양식',
+      snack_food: '분식',
+      fast_food: '패스트푸드',
+      nav_orders: '주문내역',
+      nav_home: '홈',
+      nav_settings: '설정',
+      font_family: 'Jua',
+      font_size: 16
+    };
+
+    async function onConfigChange(config) {
+      document.getElementById('appTitle').textContent = config.app_name || defaultConfig.app_name;
+      document.getElementById('koreanFood').textContent = config.korean_food || defaultConfig.korean_food;
+      document.getElementById('japaneseFood').textContent = config.japanese_food || defaultConfig.japanese_food;
+      document.getElementById('chineseFood').textContent = config.chinese_food || defaultConfig.chinese_food;
+      document.getElementById('westernFood').textContent = config.western_food || defaultConfig.western_food;
+      document.getElementById('snackFood').textContent = config.snack_food || defaultConfig.snack_food;
+      document.getElementById('fastFood').textContent = config.fast_food || defaultConfig.fast_food;
+      document.getElementById('navOrders').textContent = config.nav_orders || defaultConfig.nav_orders;
+      document.getElementById('navHome').textContent = config.nav_home || defaultConfig.nav_home;
+      document.getElementById('navSettings').textContent = config.nav_settings || defaultConfig.nav_settings;
+      
+      const bgColor = config.background_color || defaultConfig.background_color;
+      const primaryColor = config.primary_color || defaultConfig.primary_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const borderColor = config.card_border_color || defaultConfig.card_border_color;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      const fontSize = config.font_size || defaultConfig.font_size;
+      
+      document.querySelector('.app-container').style.backgroundColor = bgColor;
+      document.querySelector('.top-bar').style.backgroundColor = bgColor;
+      document.querySelector('.bottom-bar').style.backgroundColor = bgColor;
+      document.querySelector('.app-title').style.color = textColor;
+      document.querySelector('.app-title').style.fontFamily = `${fontFamily}, sans-serif`;
+      document.querySelector('.app-title').style.fontSize = `${fontSize * 1.5}px`;
+      
+      document.querySelectorAll('.category-card').forEach(card => {
+        card.style.backgroundColor = bgColor;
+        card.style.borderColor = borderColor;
+      });
+      
+      document.querySelectorAll('.category-name').forEach(name => {
+        name.style.color = textColor;
+        name.style.fontFamily = `${fontFamily}, sans-serif`;
+        name.style.fontSize = `${fontSize}px`;
+      });
+      
+      document.querySelectorAll('.nav-text').forEach(text => {
+        text.style.fontFamily = `${fontFamily}, sans-serif`;
+        text.style.fontSize = `${fontSize * 0.75}px`;
+      });
+      
+      document.querySelectorAll('.nav-btn.active').forEach(btn => {
+        btn.style.color = primaryColor;
+      });
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
+              window.elementSdk.setConfig({ background_color: value });
+            }
+          },
+          {
+            get: () => config.primary_color || defaultConfig.primary_color,
+            set: (value) => {
+              config.primary_color = value;
+              window.elementSdk.setConfig({ primary_color: value });
+            }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
+              window.elementSdk.setConfig({ text_color: value });
+            }
+          },
+          {
+            get: () => config.card_border_color || defaultConfig.card_border_color,
+            set: (value) => {
+              config.card_border_color = value;
+              window.elementSdk.setConfig({ card_border_color: value });
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (value) => {
+            config.font_family = value;
+            window.elementSdk.setConfig({ font_family: value });
+          }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (value) => {
+            config.font_size = value;
+            window.elementSdk.setConfig({ font_size: value });
+          }
+        }
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['app_name', config.app_name || defaultConfig.app_name],
+        ['korean_food', config.korean_food || defaultConfig.korean_food],
+        ['japanese_food', config.japanese_food || defaultConfig.japanese_food],
+        ['chinese_food', config.chinese_food || defaultConfig.chinese_food],
+        ['western_food', config.western_food || defaultConfig.western_food],
+        ['snack_food', config.snack_food || defaultConfig.snack_food],
+        ['fast_food', config.fast_food || defaultConfig.fast_food],
+        ['nav_orders', config.nav_orders || defaultConfig.nav_orders],
+        ['nav_home', config.nav_home || defaultConfig.nav_home],
+        ['nav_settings', config.nav_settings || defaultConfig.nav_settings]
+      ]);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+
+    // 카테고리 클릭 이벤트 - 백엔드 API와 연동
+    document.querySelectorAll('.category-card').forEach(card => {
+      card.addEventListener('click', async () => {
+        const category = card.dataset.category;
+        console.log(`${category} 카테고리 선택됨`);
+        
+        // 카테고리 ID를 가져오기 위해 먼저 카테고리 목록 조회
+        try {
+          const categoriesRes = await fetch('/customer/categories');
+          const categories = await categoriesRes.json();
+          
+          // 카테고리 이름으로 매칭 (한식, 일식, 중식 등)
+          const categoryMap = {
+            'korean': '한식',
+            'japanese': '일식',
+            'chinese': '중식',
+            'western': '양식',
+            'snack': '분식',
+            'fastfood': '패스트푸드'
+          };
+          
+          const categoryName = categoryMap[category];
+          const foundCategory = categories.find(cat => cat.category === categoryName);
+          
+          if (foundCategory) {
+            window.location.href = `/customer/storelist?category_id=${foundCategory.id}`;
+          } else {
+            // 카테고리를 찾지 못한 경우 기본값으로 이동
+            window.location.href = `/customer/storelist`;
+          }
+        } catch (error) {
+          console.error('카테고리 조회 오류:', error);
+          window.location.href = `/customer/storelist`;
+        }
+      });
+    });
+
+    // 상단 아이콘 클릭 이벤트
+    document.getElementById('favoriteBtn').addEventListener('click', () => {
+      console.log('찜 목록 열기');
+      window.location.href = '/favorites/page';
+    });
+
+    document.getElementById('cartBtn').addEventListener('click', () => {
+      console.log('장바구니 열기');
+      window.location.href = '/customer/cart';
+    });
+
+    // 하단 네비게이션 클릭 이벤트
+    const navBtns = document.querySelectorAll('.nav-btn');
+    
+    document.getElementById('ordersBtn').addEventListener('click', () => {
+      navBtns.forEach(btn => btn.classList.remove('active'));
+      document.getElementById('ordersBtn').classList.add('active');
+      console.log('주문내역 페이지로 이동');
+      window.location.href = '/customer/orderlist';
+    });
+
+    document.getElementById('homeBtn').addEventListener('click', () => {
+      navBtns.forEach(btn => btn.classList.remove('active'));
+      document.getElementById('homeBtn').classList.add('active');
+      console.log('홈 페이지로 이동');
+    });
+
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+      navBtns.forEach(btn => btn.classList.remove('active'));
+      document.getElementById('settingsBtn').classList.add('active');
+      console.log('설정 페이지로 이동');
+      window.location.href = '/users/setting';
+    });
+
+    // 위에서 이미 처리됨
+
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99c696fb01f6d1e3',t:'MTc2Mjc4ODYxMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

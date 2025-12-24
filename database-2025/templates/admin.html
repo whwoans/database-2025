@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>데이터베이스 관리</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+    
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Jua', sans-serif;
+      background-color: #f8f9fa;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      color: #00d2be;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+    }
+    
+    .section h2 {
+      color: #2d3436;
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+    
+    .btn {
+      background-color: #00d2be;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      font-family: 'Jua', sans-serif;
+      transition: background-color 0.2s;
+    }
+    
+    .btn:hover {
+      background-color: #00b8a6;
+    }
+    
+    .btn-danger {
+      background-color: #dc3545;
+    }
+    
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+    
+    .result {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
+    }
+    
+    .result.success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+    
+    .result.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
+    
+    .info {
+      background-color: #e7f3ff;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      color: #004085;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="loginContainer">
+    <h1>🗄️ 데이터베이스 관리 페이지</h1>
+    
+    <div class="section">
+      <h2>🔐 관리자 로그인</h2>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 8px;">아이디:</label>
+        <input type="text" id="adminId" class="input-field" placeholder="아이디 입력" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 6px; font-family: 'Jua', sans-serif;">
+      </div>
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; margin-bottom: 8px;">비밀번호:</label>
+        <input type="password" id="adminPw" class="input-field" placeholder="비밀번호 입력" style="width: 100%; padding: 10px; border: 2px solid #e9ecef; border-radius: 6px; font-family: 'Jua', sans-serif;">
+      </div>
+      <button class="btn" onclick="adminLogin()" style="width: 100%;">로그인</button>
+      <div id="loginResult" class="result"></div>
+    </div>
+  </div>
+  
+  <div class="container" id="adminContainer" style="display: none;">
+    <h1>🗄️ 데이터베이스 관리 페이지</h1>
+    
+    <div style="text-align: right; margin-bottom: 20px;">
+      <button class="btn btn-danger" onclick="adminLogout()">로그아웃</button>
+    </div>
+    
+    <div class="info">
+      <strong>⚠️ 주의:</strong> 이 페이지는 개발/테스트용입니다. 기본 데이터를 추가하거나 초기화할 수 있습니다.
+    </div>
+    
+    <!-- 카테고리 섹션 -->
+    <div class="section">
+      <h2>📁 카테고리 (Category)</h2>
+      <button class="btn" onclick="toggleCategoryForm()">직접 입력으로 생성</button>
+      <button class="btn" onclick="addCategories()">테스트 데이터 추가</button>
+      <button class="btn btn-danger" onclick="clearCategories()">카테고리 초기화</button>
+      <div id="categoryForm" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+        <h3 style="margin-top: 0;">카테고리 직접 입력 (최소 3개)</h3>
+        <div id="categoryInputs">
+          <div style="margin-bottom: 10px;">
+            <input type="text" placeholder="카테고리 이름" class="category-input" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 10px;">
+            <input type="text" placeholder="카테고리 이름" class="category-input" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 10px;">
+            <input type="text" placeholder="카테고리 이름" class="category-input" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+          </div>
+        </div>
+        <button class="btn" onclick="addCategoryInput()" style="margin-right: 10px;">+ 추가</button>
+        <button class="btn" onclick="createCategories()">생성하기</button>
+      </div>
+      <div id="categoryResult" class="result"></div>
+    </div>
+    
+    <!-- 사용자 섹션 -->
+    <div class="section">
+      <h2>👤 사용자 (User)</h2>
+      <button class="btn" onclick="toggleUserForm()">직접 입력으로 생성</button>
+      <button class="btn" onclick="addUsers()">테스트 데이터 추가</button>
+      <button class="btn btn-danger" onclick="clearUsers()">사용자 초기화</button>
+      <div id="userForm" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+        <h3 style="margin-top: 0;">사용자 직접 입력 (최소 3개)</h3>
+        <div id="userInputs">
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <input type="text" placeholder="아이디" class="user-id" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="password" placeholder="비밀번호" class="user-passwd" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+            <input type="email" placeholder="이메일" class="user-email" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+            <input type="text" placeholder="이름" class="user-name" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px; margin-right: 2%;">
+            <input type="text" placeholder="주소" class="user-address" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+          </div>
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <input type="text" placeholder="아이디" class="user-id" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="password" placeholder="비밀번호" class="user-passwd" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+            <input type="email" placeholder="이메일" class="user-email" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+            <input type="text" placeholder="이름" class="user-name" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px; margin-right: 2%;">
+            <input type="text" placeholder="주소" class="user-address" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+          </div>
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <input type="text" placeholder="아이디" class="user-id" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="password" placeholder="비밀번호" class="user-passwd" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+            <input type="email" placeholder="이메일" class="user-email" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+            <input type="text" placeholder="이름" class="user-name" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px; margin-right: 2%;">
+            <input type="text" placeholder="주소" class="user-address" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+          </div>
+        </div>
+        <button class="btn" onclick="addUserInput()" style="margin-right: 10px;">+ 추가</button>
+        <button class="btn" onclick="createUsers()">생성하기</button>
+      </div>
+      <div id="userResult" class="result"></div>
+    </div>
+    
+    <!-- 가게 섹션 -->
+    <div class="section">
+      <h2>🏪 가게 (Store)</h2>
+      <button class="btn" onclick="toggleStoreForm()">직접 입력으로 생성</button>
+      <button class="btn" onclick="addStores()">테스트 데이터 추가</button>
+      <button class="btn btn-danger" onclick="clearStores()">가게 초기화</button>
+      <div id="storeForm" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+        <h3 style="margin-top: 0;">가게 직접 입력 (최소 3개)</h3>
+        <div id="storeInputs">
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <input type="text" placeholder="가게명" class="store-name" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+            <select class="store-category" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+              <option value="">카테고리 선택</option>
+            </select>
+            <input type="text" placeholder="전화번호" class="store-phone" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="text" placeholder="최소주문금액 (예: 15000원)" class="store-minprice" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+            <input type="text" placeholder="운영시간 (예: 09:00 - 22:00)" class="store-operationTime" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+            <input type="text" placeholder="휴무일 (예: 월요일)" class="store-closedDay" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+            <select class="store-payment" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+              <option value="">지불방식 선택</option>
+            </select>
+          </div>
+          <script>
+            // 페이지 로드 시 기존 가게 입력 필드에 지불방식 로드
+            document.addEventListener('DOMContentLoaded', function() {
+              document.querySelectorAll('.store-payment').forEach(select => {
+                loadPaymentMethodsForStoreSelect(select);
+              });
+            });
+          </script>
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <input type="text" placeholder="가게명" class="store-name" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+            <select class="store-category" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+              <option value="">카테고리 선택</option>
+            </select>
+            <input type="text" placeholder="전화번호" class="store-phone" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="text" placeholder="최소주문금액 (예: 15000원)" class="store-minprice" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+            <input type="text" placeholder="운영시간 (예: 09:00 - 22:00)" class="store-operationTime" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+            <input type="text" placeholder="휴무일 (예: 월요일)" class="store-closedDay" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+            <select class="store-payment" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+              <option value="">지불방식 선택</option>
+            </select>
+          </div>
+          <script>
+            // 페이지 로드 시 기존 가게 입력 필드에 지불방식 로드
+            document.addEventListener('DOMContentLoaded', function() {
+              document.querySelectorAll('.store-payment').forEach(select => {
+                loadPaymentMethodsForStoreSelect(select);
+              });
+            });
+          </script>
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <input type="text" placeholder="가게명" class="store-name" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+            <select class="store-category" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+              <option value="">카테고리 선택</option>
+            </select>
+            <input type="text" placeholder="전화번호" class="store-phone" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="text" placeholder="최소주문금액 (예: 15000원)" class="store-minprice" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+            <input type="text" placeholder="운영시간 (예: 09:00 - 22:00)" class="store-operationTime" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+            <input type="text" placeholder="휴무일 (예: 월요일)" class="store-closedDay" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+            <select class="store-payment" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+              <option value="">지불방식 선택</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn" onclick="addStoreInput()" style="margin-right: 10px;">+ 추가</button>
+        <button class="btn" onclick="createStores()">생성하기</button>
+      </div>
+      <div id="storeResult" class="result"></div>
+    </div>
+    
+    <!-- 메뉴 섹션 -->
+    <div class="section">
+      <h2>🍽️ 메뉴 (Menu)</h2>
+      <button class="btn" onclick="toggleMenuForm()">직접 입력으로 생성</button>
+      <button class="btn" onclick="addMenus()">테스트 데이터 추가</button>
+      <button class="btn btn-danger" onclick="clearMenus()">메뉴 초기화</button>
+      <div id="menuForm" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+        <h3 style="margin-top: 0;">메뉴 직접 입력 (최소 3개)</h3>
+        <div id="menuInputs">
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <select class="menu-store" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+              <option value="">가게 선택</option>
+            </select>
+            <input type="text" placeholder="메뉴명" class="menu-name" style="width: 70%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="number" placeholder="가격" class="menu-price" style="width: 28%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <select class="menu-store" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+              <option value="">가게 선택</option>
+            </select>
+            <input type="text" placeholder="메뉴명" class="menu-name" style="width: 70%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="number" placeholder="가격" class="menu-price" style="width: 28%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <select class="menu-store" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+              <option value="">가게 선택</option>
+            </select>
+            <input type="text" placeholder="메뉴명" class="menu-name" style="width: 70%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="number" placeholder="가격" class="menu-price" style="width: 28%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+          </div>
+        </div>
+        <button class="btn" onclick="addMenuInput()" style="margin-right: 10px;">+ 추가</button>
+        <button class="btn" onclick="createMenus()">생성하기</button>
+      </div>
+      <div id="menuResult" class="result"></div>
+    </div>
+    
+    <!-- 쿠폰 섹션 -->
+    <div class="section">
+      <h2>🎫 쿠폰 (Coupon)</h2>
+      <button class="btn" onclick="toggleCouponForm()">직접 입력으로 생성</button>
+      <button class="btn" onclick="addCoupons()">테스트 데이터 추가</button>
+      <button class="btn btn-danger" onclick="clearCoupons()">쿠폰 초기화</button>
+      <div id="couponForm" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+        <h3 style="margin-top: 0;">쿠폰 직접 입력 (최소 3개)</h3>
+        <div id="couponInputs">
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <select class="coupon-store" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+              <option value="">가게 선택</option>
+            </select>
+            <input type="number" placeholder="할인금액" class="coupon-discount" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="number" placeholder="유효기간(일)" class="coupon-period" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <select class="coupon-store" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+              <option value="">가게 선택</option>
+            </select>
+            <input type="number" placeholder="할인금액" class="coupon-discount" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="number" placeholder="유효기간(일)" class="coupon-period" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+          </div>
+          <div style="margin-bottom: 10px; padding: 10px; background: white; border-radius: 4px;">
+            <select class="coupon-store" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+              <option value="">가게 선택</option>
+            </select>
+            <input type="number" placeholder="할인금액" class="coupon-discount" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+            <input type="number" placeholder="유효기간(일)" class="coupon-period" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+          </div>
+        </div>
+        <button class="btn" onclick="addCouponInput()" style="margin-right: 10px;">+ 추가</button>
+        <button class="btn" onclick="createCoupons()">생성하기</button>
+      </div>
+      <div id="couponResult" class="result"></div>
+    </div>
+    
+    <!-- 전체 초기화 -->
+    <div class="section">
+      <h2>🔄 전체 초기화</h2>
+      <button class="btn btn-danger" onclick="resetAll()">모든 데이터 초기화</button>
+      <div id="resetResult" class="result"></div>
+    </div>
+  </div>
+  
+  <script>
+    // 로그인 상태 확인
+    function checkLogin() {
+      const isLoggedIn = sessionStorage.getItem('adminLoggedIn') === 'true';
+      if (isLoggedIn) {
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('adminContainer').style.display = 'block';
+      } else {
+        document.getElementById('loginContainer').style.display = 'block';
+        document.getElementById('adminContainer').style.display = 'none';
+      }
+    }
+    
+    // 관리자 로그인
+    function adminLogin() {
+      const adminId = document.getElementById('adminId').value;
+      const adminPw = document.getElementById('adminPw').value;
+      
+      if (adminId === 'root' && adminPw === 'root') {
+        sessionStorage.setItem('adminLoggedIn', 'true');
+        showResult('loginResult', '로그인 성공!', true);
+        setTimeout(() => {
+          checkLogin();
+        }, 500);
+      } else {
+        showResult('loginResult', '아이디 또는 비밀번호가 잘못되었습니다.', false);
+      }
+    }
+    
+    // 관리자 로그아웃
+    function adminLogout() {
+      sessionStorage.removeItem('adminLoggedIn');
+      checkLogin();
+    }
+    
+    function showResult(elementId, message, isSuccess) {
+      const result = document.getElementById(elementId);
+      result.textContent = message;
+      result.className = 'result ' + (isSuccess ? 'success' : 'error');
+      setTimeout(() => {
+        result.style.display = 'none';
+      }, 5000);
+    }
+    
+    // 페이지 로드 시 로그인 상태 확인
+    checkLogin();
+    
+    // 로그인 확인 함수
+    function requireLogin() {
+      if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+        alert('로그인이 필요합니다.');
+        checkLogin();
+        return false;
+      }
+      return true;
+    }
+    
+    async function addCategories() {
+      if (!requireLogin()) return;
+      try {
+        const response = await fetch('/admin/categories/seed', { method: 'POST' });
+        const data = await response.json();
+        showResult('categoryResult', data.message || '카테고리가 추가되었습니다.', response.ok);
+      } catch (error) {
+        showResult('categoryResult', '오류: ' + error.message, false);
+      }
+    }
+    
+    async function clearCategories() {
+      if (!requireLogin()) return;
+      if (!confirm('정말 카테고리를 모두 삭제하시겠습니까?')) return;
+      try {
+        const response = await fetch('/admin/categories/clear', { method: 'DELETE' });
+        const data = await response.json();
+        showResult('categoryResult', data.message || '카테고리가 삭제되었습니다.', response.ok);
+      } catch (error) {
+        showResult('categoryResult', '오류: ' + error.message, false);
+      }
+    }
+    
+    async function addUsers() {
+      if (!requireLogin()) return;
+      try {
+        const response = await fetch('/admin/users/seed', { method: 'POST' });
+        const data = await response.json();
+        showResult('userResult', data.message || '테스트 사용자가 추가되었습니다.', response.ok);
+      } catch (error) {
+        showResult('userResult', '오류: ' + error.message, false);
+      }
+    }
+    
+    async function clearUsers() {
+      if (!requireLogin()) return;
+      if (!confirm('정말 사용자를 모두 삭제하시겠습니까?')) return;
+      try {
+        const response = await fetch('/admin/users/clear', { method: 'DELETE' });
+        const data = await response.json();
+        showResult('userResult', data.message || '사용자가 삭제되었습니다.', response.ok);
+      } catch (error) {
+        showResult('userResult', '오류: ' + error.message, false);
+      }
+    }
+    
+    async function addStores() {
+      if (!requireLogin()) return;
+      try {
+        const response = await fetch('/admin/stores/seed', { method: 'POST' });
+        const data = await response.json();
+        showResult('storeResult', data.message || '테스트 가게가 추가되었습니다.', response.ok);
+      } catch (error) {
+        showResult('storeResult', '오류: ' + error.message, false);
+      }
+    }
+    
+    async function clearStores() {
+      if (!requireLogin()) return;
+      if (!confirm('정말 가게를 모두 삭제하시겠습니까?')) return;
+      try {
+        const response = await fetch('/admin/stores/clear', { method: 'DELETE' });
+        const data = await response.json();
+        showResult('storeResult', data.message || '가게가 삭제되었습니다.', response.ok);
+      } catch (error) {
+        showResult('storeResult', '오류: ' + error.message, false);
+      }
+    }
+    
+    async function addMenus() {
+      if (!requireLogin()) return;
+      try {
+        const response = await fetch('/admin/menus/seed', { method: 'POST' });
+        const data = await response.json();
+        showResult('menuResult', data.message || '테스트 메뉴가 추가되었습니다.', response.ok);
+      } catch (error) {
+        showResult('menuResult', '오류: ' + error.message, false);
+      }
+    }
+    
+    async function clearMenus() {
+      if (!requireLogin()) return;
+      if (!confirm('정말 메뉴를 모두 삭제하시겠습니까?')) return;
+      try {
+        const response = await fetch('/admin/menus/clear', { method: 'DELETE' });
+        const data = await response.json();
+        showResult('menuResult', data.message || '메뉴가 삭제되었습니다.', response.ok);
+      } catch (error) {
+        showResult('menuResult', '오류: ' + error.message, false);
+      }
+    }
+    
+    async function addCoupons() {
+      if (!requireLogin()) return;
+      try {
+        const response = await fetch('/admin/coupons/seed', { method: 'POST' });
+        const data = await response.json();
+        showResult('couponResult', data.message || '테스트 쿠폰이 추가되었습니다.', response.ok);
+      } catch (error) {
+        showResult('couponResult', '오류: ' + error.message, false);
+      }
+    }
+    
+    async function clearCoupons() {
+      if (!requireLogin()) return;
+      if (!confirm('정말 쿠폰을 모두 삭제하시겠습니까?')) return;
+      try {
+        const response = await fetch('/admin/coupons/clear', { method: 'DELETE' });
+        const data = await response.json();
+        showResult('couponResult', data.message || '쿠폰이 삭제되었습니다.', response.ok);
+      } catch (error) {
+        showResult('couponResult', '오류: ' + error.message, false);
+      }
+    }
+    
+    async function resetAll() {
+      if (!requireLogin()) return;
+      if (!confirm('⚠️ 정말 모든 데이터를 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다!')) return;
+      try {
+        const response = await fetch('/admin/reset', { method: 'POST' });
+        const data = await response.json();
+        showResult('resetResult', data.message || '모든 데이터가 초기화되었습니다.', response.ok);
+      } catch (error) {
+        showResult('resetResult', '오류: ' + error.message, false);
+      }
+    }
+
+    // 폼 토글 함수들
+    function toggleCategoryForm() {
+      const form = document.getElementById('categoryForm');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleUserForm() {
+      const form = document.getElementById('userForm');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleStoreForm() {
+      const form = document.getElementById('storeForm');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      if (form.style.display === 'block') {
+        loadCategoriesForStore();
+        // 기존 가게 입력 필드에 지불방식 로드
+        document.querySelectorAll('.store-payment').forEach(select => {
+          loadPaymentMethodsForStoreSelect(select);
+        });
+      }
+    }
+
+    function toggleMenuForm() {
+      const form = document.getElementById('menuForm');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      if (form.style.display === 'block') {
+        loadStoresForMenu();
+      }
+    }
+
+    function toggleCouponForm() {
+      const form = document.getElementById('couponForm');
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      if (form.style.display === 'block') {
+        loadStoresForCoupon();
+      }
+    }
+
+    // 카테고리 입력 필드 추가
+    function addCategoryInput() {
+      const container = document.getElementById('categoryInputs');
+      const div = document.createElement('div');
+      div.style.marginBottom = '10px';
+      div.innerHTML = `
+        <input type="text" placeholder="카테고리 이름" class="category-input" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+      `;
+      container.appendChild(div);
+    }
+
+    // 사용자 입력 필드 추가
+    function addUserInput() {
+      const container = document.getElementById('userInputs');
+      const div = document.createElement('div');
+      div.style.marginBottom = '10px';
+      div.style.padding = '10px';
+      div.style.background = 'white';
+      div.style.borderRadius = '4px';
+      div.innerHTML = `
+        <input type="text" placeholder="아이디" class="user-id" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+        <input type="password" placeholder="비밀번호" class="user-passwd" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+        <input type="email" placeholder="이메일" class="user-email" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+        <input type="text" placeholder="이름" class="user-name" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px; margin-right: 2%;">
+        <input type="text" placeholder="주소" class="user-address" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+      `;
+      container.appendChild(div);
+    }
+
+    // 가게 입력 필드 추가
+    function addStoreInput() {
+      const container = document.getElementById('storeInputs');
+      const div = document.createElement('div');
+      div.style.marginBottom = '10px';
+      div.style.padding = '10px';
+      div.style.background = 'white';
+      div.style.borderRadius = '4px';
+      div.innerHTML = `
+        <input type="text" placeholder="가게명" class="store-name" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+        <select class="store-category" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+          <option value="">카테고리 선택</option>
+        </select>
+        <input type="text" placeholder="전화번호" class="store-phone" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+        <input type="text" placeholder="최소주문금액 (예: 15000원)" class="store-minprice" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+        <input type="text" placeholder="운영시간 (예: 09:00 - 22:00)" class="store-operationTime" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+        <input type="text" placeholder="휴무일 (예: 월요일)" class="store-closedDay" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+           <select class="store-payment" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-top: 8px;">
+             <option value="">지불방식 선택</option>
+           </select>
+      `;
+      container.appendChild(div);
+      loadCategoriesForStoreSelect(div.querySelector('.store-category'));
+      loadPaymentMethodsForStoreSelect(div.querySelector('.store-payment'));
+    }
+
+    // 메뉴 입력 필드 추가
+    function addMenuInput() {
+      const container = document.getElementById('menuInputs');
+      const div = document.createElement('div');
+      div.style.marginBottom = '10px';
+      div.style.padding = '10px';
+      div.style.background = 'white';
+      div.style.borderRadius = '4px';
+      div.innerHTML = `
+        <select class="menu-store" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+          <option value="">가게 선택</option>
+        </select>
+        <input type="text" placeholder="메뉴명" class="menu-name" style="width: 70%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+        <input type="number" placeholder="가격" class="menu-price" style="width: 28%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+      `;
+      container.appendChild(div);
+      loadStoresForMenuSelect(div.querySelector('.menu-store'));
+    }
+
+    // 쿠폰 입력 필드 추가
+    function addCouponInput() {
+      const container = document.getElementById('couponInputs');
+      const div = document.createElement('div');
+      div.style.marginBottom = '10px';
+      div.style.padding = '10px';
+      div.style.background = 'white';
+      div.style.borderRadius = '4px';
+      div.innerHTML = `
+        <select class="coupon-store" style="width: 100%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-bottom: 8px;">
+          <option value="">가게 선택</option>
+        </select>
+        <input type="number" placeholder="할인금액" class="coupon-discount" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px; margin-right: 2%;">
+        <input type="number" placeholder="유효기간(일)" class="coupon-period" style="width: 48%; padding: 8px; border: 2px solid #e9ecef; border-radius: 4px;">
+      `;
+      container.appendChild(div);
+      loadStoresForCouponSelect(div.querySelector('.coupon-store'));
+    }
+
+    // 카테고리 목록 로드 (가게용)
+    async function loadCategoriesForStore() {
+      try {
+        const response = await fetch('/admin/categories');
+        const categories = await response.json();
+        const selects = document.querySelectorAll('.store-category');
+        selects.forEach(select => {
+          select.innerHTML = '<option value="">카테고리 선택</option>';
+          categories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat.id;
+            option.textContent = cat.category;
+            select.appendChild(option);
+          });
+        });
+      } catch (error) {
+        console.error('카테고리 로드 오류:', error);
+      }
+    }
+
+    async function loadCategoriesForStoreSelect(select) {
+      try {
+        const response = await fetch('/admin/categories');
+        const categories = await response.json();
+        select.innerHTML = '<option value="">카테고리 선택</option>';
+        categories.forEach(cat => {
+          const option = document.createElement('option');
+          option.value = cat.id;
+          option.textContent = cat.category;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error('카테고리 로드 오류:', error);
+      }
+    }
+
+    // 지불방식 목록 로드 (가게 입력용)
+    async function loadPaymentMethodsForStoreSelect(select) {
+      try {
+        const response = await fetch('/customer/payment-methods');
+        if (response.ok) {
+          const paymentMethods = await response.json();
+          select.innerHTML = '<option value="">지불방식 선택</option>';
+          paymentMethods.forEach(pm => {
+            const option = document.createElement('option');
+            option.value = pm.id;
+            option.textContent = pm.method_name;
+            select.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error('지불방식 로드 오류:', error);
+      }
+    }
+
+    // 가게 목록 로드 (메뉴/쿠폰용)
+    async function loadStoresForMenu() {
+      try {
+        const response = await fetch('/admin/stores/list');
+        const stores = await response.json();
+        const selects = document.querySelectorAll('.menu-store');
+        selects.forEach(select => {
+          select.innerHTML = '<option value="">가게 선택</option>';
+          stores.forEach(store => {
+            const option = document.createElement('option');
+            option.value = store.id;
+            option.textContent = store.store_name;
+            select.appendChild(option);
+          });
+        });
+      } catch (error) {
+        console.error('가게 로드 오류:', error);
+      }
+    }
+
+    async function loadStoresForMenuSelect(select) {
+      try {
+        const response = await fetch('/admin/stores/list');
+        const stores = await response.json();
+        select.innerHTML = '<option value="">가게 선택</option>';
+        stores.forEach(store => {
+          const option = document.createElement('option');
+          option.value = store.id;
+          option.textContent = store.store_name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error('가게 로드 오류:', error);
+      }
+    }
+
+    async function loadStoresForCoupon() {
+      try {
+        const response = await fetch('/admin/stores/list');
+        const stores = await response.json();
+        const selects = document.querySelectorAll('.coupon-store');
+        selects.forEach(select => {
+          select.innerHTML = '<option value="">가게 선택</option>';
+          stores.forEach(store => {
+            const option = document.createElement('option');
+            option.value = store.id;
+            option.textContent = store.store_name;
+            select.appendChild(option);
+          });
+        });
+      } catch (error) {
+        console.error('가게 로드 오류:', error);
+      }
+    }
+
+    async function loadStoresForCouponSelect(select) {
+      try {
+        const response = await fetch('/admin/stores/list');
+        const stores = await response.json();
+        select.innerHTML = '<option value="">가게 선택</option>';
+        stores.forEach(store => {
+          const option = document.createElement('option');
+          option.value = store.id;
+          option.textContent = store.store_name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error('가게 로드 오류:', error);
+      }
+    }
+
+    // 직접 생성 함수들
+    async function createCategories() {
+      if (!requireLogin()) return;
+      const inputs = document.querySelectorAll('#categoryForm .category-input');
+      const categories = Array.from(inputs)
+        .map(input => input.value.trim())
+        .filter(val => val.length > 0);
+      
+      if (categories.length < 1) {
+        showResult('categoryResult', '최소 1개 이상의 카테고리를 입력해주세요.', false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/categories/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ categories })
+        });
+        const data = await response.json();
+        showResult('categoryResult', data.message || data.error, response.ok);
+        if (response.ok) {
+          document.getElementById('categoryForm').style.display = 'none';
+          inputs.forEach(input => input.value = '');
+        }
+      } catch (error) {
+        showResult('categoryResult', '오류: ' + error.message, false);
+      }
+    }
+
+    async function createUsers() {
+      if (!requireLogin()) return;
+      const containers = document.querySelectorAll('#userInputs > div');
+      const users = [];
+      
+      containers.forEach(container => {
+        const user_id = container.querySelector('.user-id')?.value.trim();
+        const passwd = container.querySelector('.user-passwd')?.value.trim();
+        const email = container.querySelector('.user-email')?.value.trim();
+        const name = container.querySelector('.user-name')?.value.trim();
+        const address = container.querySelector('.user-address')?.value.trim();
+        
+        if (user_id && passwd && email && name && address) {
+          users.push({ user_id, passwd, email, name, address });
+        }
+      });
+
+      if (users.length < 1) {
+        showResult('userResult', '최소 1개 이상의 사용자 정보를 입력해주세요.', false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/users/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ users })
+        });
+        const data = await response.json();
+        showResult('userResult', data.message || data.error, response.ok);
+        if (response.ok) {
+          document.getElementById('userForm').style.display = 'none';
+          containers.forEach(container => {
+            container.querySelectorAll('input').forEach(input => input.value = '');
+          });
+        }
+      } catch (error) {
+        showResult('userResult', '오류: ' + error.message, false);
+      }
+    }
+
+    async function createStores() {
+      if (!requireLogin()) return;
+      const containers = document.querySelectorAll('#storeInputs > div');
+      const stores = [];
+      
+      containers.forEach(container => {
+        const store_name = container.querySelector('.store-name')?.value.trim();
+        const category_id = container.querySelector('.store-category')?.value;
+        const phone = container.querySelector('.store-phone')?.value.trim();
+        const minprice = container.querySelector('.store-minprice')?.value.trim();
+        const operationTime = container.querySelector('.store-operationTime')?.value.trim();
+        const closedDay = container.querySelector('.store-closedDay')?.value.trim();
+        
+        // 지불방식 수집
+        const payment_id = container.querySelector('.store-payment')?.value;
+        
+        // 모든 필수 필드 검증
+        if (store_name && category_id && phone && minprice && operationTime && closedDay && payment_id) {
+          stores.push({ 
+            store_name, 
+            category_id: parseInt(category_id), 
+            phone, 
+            minprice, 
+            operationTime, 
+            closedDay,
+            payment_id: parseInt(payment_id)
+          });
+        }
+      });
+
+      if (stores.length < 1) {
+        showResult('storeResult', '최소 1개 이상의 가게 정보를 입력해주세요.', false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/stores/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stores })
+        });
+        const data = await response.json();
+        showResult('storeResult', data.message || data.error, response.ok);
+        if (response.ok) {
+          document.getElementById('storeForm').style.display = 'none';
+          containers.forEach(container => {
+            container.querySelectorAll('input, select').forEach(input => {
+              if (input.tagName === 'SELECT') input.value = '';
+              else input.value = '';
+            });
+          });
+          // 가게 목록 새로고침 (메뉴/쿠폰 폼에서 사용)
+          loadStoresForMenu();
+          loadStoresForCoupon();
+        }
+      } catch (error) {
+        showResult('storeResult', '오류: ' + error.message, false);
+      }
+    }
+
+    async function createMenus() {
+      if (!requireLogin()) return;
+      const containers = document.querySelectorAll('#menuInputs > div');
+      const menus = [];
+      
+      containers.forEach(container => {
+        const store_id = container.querySelector('.menu-store')?.value;
+        const menu = container.querySelector('.menu-name')?.value.trim();
+        const price = container.querySelector('.menu-price')?.value;
+        
+        if (store_id && menu && price) {
+          menus.push({ store_id: parseInt(store_id), menu, price: parseInt(price) });
+        }
+      });
+
+      if (menus.length < 1) {
+        showResult('menuResult', '최소 1개 이상의 메뉴 정보를 입력해주세요.', false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/menus/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ menus })
+        });
+        const data = await response.json();
+        showResult('menuResult', data.message || data.error, response.ok);
+        if (response.ok) {
+          document.getElementById('menuForm').style.display = 'none';
+          containers.forEach(container => {
+            container.querySelectorAll('input, select').forEach(input => {
+              if (input.tagName === 'SELECT') input.value = '';
+              else input.value = '';
+            });
+          });
+        }
+      } catch (error) {
+        showResult('menuResult', '오류: ' + error.message, false);
+      }
+    }
+
+    async function createCoupons() {
+      if (!requireLogin()) return;
+      const containers = document.querySelectorAll('#couponInputs > div');
+      const coupons = [];
+      
+      containers.forEach(container => {
+        const store_id = container.querySelector('.coupon-store')?.value;
+        const discount = container.querySelector('.coupon-discount')?.value;
+        const period = container.querySelector('.coupon-period')?.value || 30;
+        
+        if (store_id && discount) {
+          coupons.push({ store_id: parseInt(store_id), discount: parseInt(discount), period: parseInt(period) });
+        }
+      });
+
+      if (coupons.length < 1) {
+        showResult('couponResult', '최소 1개 이상의 쿠폰 정보를 입력해주세요.', false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/coupons/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coupons })
+        });
+        const data = await response.json();
+        showResult('couponResult', data.message || data.error, response.ok);
+        if (response.ok) {
+          document.getElementById('couponForm').style.display = 'none';
+          containers.forEach(container => {
+            container.querySelectorAll('input, select').forEach(input => {
+              if (input.tagName === 'SELECT') input.value = '';
+              else input.value = '';
+            });
+          });
+        }
+      } catch (error) {
+        showResult('couponResult', '오류: ' + error.message, false);
+      }
+    }
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="ko">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>주문/결제</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+    
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Jua', sans-serif;
+      background-color: #f8f9fa;
+    }
+    
+    html {
+      height: 100%;
+    }
+    
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* 상단바 */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      background-color: #ffffff;
+      border-bottom: 2px solid #f0f0f0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .back-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      font-size: 24px;
+      transition: transform 0.2s;
+    }
+    
+    .back-btn:hover {
+      transform: scale(1.1);
+    }
+    
+    .page-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2d3436;
+      margin: 0;
+      flex: 1;
+      text-align: center;
+    }
+    
+    .placeholder {
+      width: 40px;
+    }
+    
+    /* 메인 컨텐츠 */
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      padding-bottom: 220px; /* 하단 고정 영역 높이만큼 여유 공간 확보 */
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch; /* iOS 부드러운 스크롤 */
+    }
+    
+    /* 섹션 공통 스타일 */
+    .section {
+      margin-bottom: 24px;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 12px;
+      border: 2px solid #e9ecef;
+    }
+    
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2d3436;
+      margin: 0 0 16px 0;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e9ecef;
+    }
+    
+    /* 주문 메뉴 */
+    .menu-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+    
+    .menu-item:last-child {
+      border-bottom: none;
+    }
+    
+    .menu-info {
+      flex: 1;
+    }
+    
+    .menu-name {
+      font-size: 16px;
+      color: #2d3436;
+      margin: 0 0 4px 0;
+    }
+    
+    .menu-quantity {
+      font-size: 14px;
+      color: #6c757d;
+      margin: 0;
+    }
+    
+    .menu-price {
+      font-size: 16px;
+      font-weight: bold;
+      color: #00d2be;
+    }
+    
+    /* 배송지 */
+    .address-box {
+      padding: 16px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      border: 2px solid #e9ecef;
+    }
+    
+    .address-text {
+      font-size: 15px;
+      color: #2d3436;
+      margin: 0;
+      line-height: 1.6;
+    }
+    
+    .change-address-btn {
+      margin-top: 12px;
+      padding: 8px 16px;
+      background-color: #ffffff;
+      color: #00d2be;
+      border: 2px solid #00d2be;
+      border-radius: 8px;
+      font-family: 'Jua', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .change-address-btn:hover {
+      background-color: #00d2be;
+      color: #ffffff;
+    }
+    
+    /* 쿠폰 */
+    .coupon-select {
+      width: 100%;
+      padding: 12px;
+      background-color: #ffffff;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-family: 'Jua', sans-serif;
+      font-size: 15px;
+      color: #2d3436;
+      cursor: pointer;
+      transition: border-color 0.3s ease;
+    }
+    
+    .coupon-select:hover {
+      border-color: #00d2be;
+    }
+    
+    .coupon-select:focus {
+      outline: none;
+      border-color: #00d2be;
+    }
+    
+    /* 결제 방식 */
+    .payment-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px; /* 하단 여백 추가 */
+    }
+    
+    .payment-option {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      background-color: #ffffff;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .payment-option:hover {
+      border-color: #00d2be;
+      background-color: #f0fffe;
+    }
+    
+    .payment-option.selected {
+      border-color: #00d2be;
+      background-color: #f0fffe;
+    }
+    
+    .payment-radio {
+      width: 20px;
+      height: 20px;
+      margin-right: 12px;
+      cursor: pointer;
+      accent-color: #00d2be;
+    }
+    
+    .payment-label {
+      font-size: 16px;
+      color: #2d3436;
+      cursor: pointer;
+      flex: 1;
+    }
+    
+    .payment-icon {
+      font-size: 24px;
+    }
+    
+    /* 하단 주문 영역 */
+    .order-section {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background-color: #ffffff;
+      border-top: 2px solid #f0f0f0;
+      padding: 20px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+    }
+    
+    .price-breakdown {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+      color: #6c757d;
+    }
+    
+    .price-row.total {
+      padding-top: 12px;
+      border-top: 2px solid #e9ecef;
+      font-size: 18px;
+      font-weight: bold;
+      color: #2d3436;
+    }
+    
+    .price-row.total .price {
+      color: #00d2be;
+      font-size: 22px;
+    }
+    
+    .price-row .discount {
+      color: #dc3545;
+    }
+    
+    .order-btn {
+      width: 100%;
+      padding: 16px;
+      background-color: #00d2be;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Jua', sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .order-btn:hover {
+      background-color: #00b8a6;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 210, 190, 0.3);
+    }
+    
+    .order-btn:active {
+      transform: translateY(0);
+    }
+    
+    .order-btn:disabled {
+      background-color: #adb5bd;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    @media (max-width: 480px) {
+      .menu-name {
+        font-size: 15px;
+      }
+      
+      .menu-price {
+        font-size: 15px;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+
+ </head>
+ <body>
+  <div class="app-container"><!-- 상단바 -->
+   <header class="top-bar"><button class="back-btn" id="backBtn" aria-label="뒤로가기">←</button>
+    <h1 class="page-title" id="pageTitle">주문</h1>
+    <div class="placeholder"></div>
+   </header><!-- 메인 컨텐츠 -->
+   <main class="main-content" id="mainContent"><!-- 주문 메뉴 -->
+    <section class="section">
+     <h2 class="section-title">주문 메뉴</h2>
+     <div id="menuList"><!-- 메뉴 아이템들이 여기에 동적으로 추가됩니다 -->
+     </div>
+    </section><!-- 배송지 -->
+    <section class="section">
+     <h2 class="section-title">배송지</h2>
+     <div class="address-box">
+      <p class="address-text" id="addressText">주소를 불러오는 중...</p><button class="change-address-btn" id="changeAddressBtn">주소 변경</button>
+     </div>
+    </section><!-- 쿠폰 -->
+    <section class="section">
+     <h2 class="section-title">쿠폰</h2><select class="coupon-select" id="couponSelect"> <option value="">쿠폰을 선택하세요</option> </select>
+    </section><!-- 결제 방식 -->
+    <section class="section">
+     <h2 class="section-title">결제 방식</h2>
+     <div class="payment-methods" id="paymentMethods">
+       <!-- 가게의 지불방식이 여기에 동적으로 추가됩니다 -->
+     </div>
+    </section>
+   </main><!-- 하단 주문 영역 -->
+   <div class="order-section" id="orderSection">
+    <div class="price-breakdown">
+     <div class="price-row"><span>주문 금액</span> <span class="price" id="originalPrice">0원</span>
+     </div>
+     <div class="price-row" id="discountRow" style="display: none;"><span>쿠폰 할인</span> <span class="price discount" id="discountPrice">-0원</span>
+     </div>
+     <div class="price-row total"><span>최종 결제 금액</span> <span class="price" id="totalPrice">0원</span>
+     </div>
+    </div><button class="order-btn" id="orderBtn">주문하기</button>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      background_color: '#ffffff',
+      primary_color: '#00d2be',
+      text_color: '#2d3436',
+      border_color: '#e9ecef',
+      page_title: '주문',
+      order_button_text: '주문하기',
+      font_family: 'Jua',
+      font_size: 16
+    };
+
+    let cartData = [];
+    let selectedCoupon = null;
+    let selectedPayment = null; // 하나만 선택 가능
+
+    // 장바구니 데이터 불러오기
+    function loadCartData() {
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        cartData = JSON.parse(savedCart);
+      }
+      renderMenuList();
+      calculateTotal();
+    }
+
+    // 메뉴 리스트 렌더링
+    function renderMenuList() {
+      const menuList = document.getElementById('menuList');
+      menuList.innerHTML = '';
+      
+      cartData.forEach(item => {
+        const menuItem = document.createElement('div');
+        menuItem.className = 'menu-item';
+        menuItem.innerHTML = `
+          <div class="menu-info">
+            <p class="menu-name">${item.menuName}</p>
+            <p class="menu-quantity">수량: ${item.quantity}개</p>
+          </div>
+          <span class="menu-price">${(item.price * item.quantity).toLocaleString()}원</span>
+        `;
+        menuList.appendChild(menuItem);
+      });
+    }
+
+    // 주소 불러오기 - 백엔드 API에서 가져오기
+    async function loadAddress() {
+      const addressText = document.getElementById('addressText');
+      
+      try {
+        const response = await fetch('/users/me');
+        if (response.ok) {
+          const user = await response.json();
+          if (user.address) {
+            addressText.textContent = user.address;
+          } else {
+            addressText.textContent = '등록된 주소가 없습니다. 주소를 등록해주세요.';
+          }
+        } else {
+          addressText.textContent = '주소를 불러올 수 없습니다. 로그인이 필요합니다.';
+        }
+      } catch (error) {
+        console.error('주소 로드 오류:', error);
+        addressText.textContent = '주소를 불러올 수 없습니다.';
+      }
+    }
+
+    // 쿠폰 불러오기 - 백엔드 API에서 가져오기
+    async function loadCoupons() {
+      const couponSelect = document.getElementById('couponSelect');
+      couponSelect.innerHTML = '<option value="">쿠폰 선택</option>';
+      
+      // URL에서 store_id 가져오기
+      const urlParams = new URLSearchParams(window.location.search);
+      const storeId = urlParams.get('store_id');
+      
+      if (!storeId) {
+        console.log('가게 ID가 없습니다.');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/customer/stores/${storeId}/coupons`);
+        if (response.ok) {
+          const coupons = await response.json();
+          
+          coupons.forEach(coupon => {
+            const option = document.createElement('option');
+            option.value = JSON.stringify({
+              id: coupon.id,
+              discount: coupon.discount,
+              period: coupon.period
+            });
+            option.textContent = `${coupon.discount}원 할인 쿠폰`;
+            couponSelect.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error('쿠폰 로드 오류:', error);
+      }
+    }
+
+    // 가게의 지불방식 불러오기 - 백엔드 API에서 가져오기
+    async function loadStorePayments() {
+      const paymentMethods = document.getElementById('paymentMethods');
+      paymentMethods.innerHTML = '';
+      
+      // URL에서 store_id 가져오기
+      const urlParams = new URLSearchParams(window.location.search);
+      const storeId = urlParams.get('store_id');
+      
+      if (!storeId) {
+        console.log('가게 ID가 없습니다.');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/customer/stores/${storeId}/payments`);
+        if (response.ok) {
+          const payments = await response.json();
+          
+          if (payments.length === 0) {
+            paymentMethods.innerHTML = '<p style="color: #6c757d; text-align: center;">사용 가능한 지불방식이 없습니다.</p>';
+            return;
+          }
+          
+          payments.forEach(payment => {
+            const label = document.createElement('label');
+            label.className = 'payment-option';
+            label.id = `payment_${payment.id}`;
+            
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'payment';
+            radio.value = payment.id;
+            radio.className = 'payment-radio';
+            radio.id = `paymentRadio_${payment.id}`;
+            
+            const spanLabel = document.createElement('span');
+            spanLabel.className = 'payment-label';
+            spanLabel.textContent = payment.payment;
+            
+            const spanIcon = document.createElement('span');
+            spanIcon.className = 'payment-icon';
+            // 지불방식에 따라 아이콘 설정
+            if (payment.payment.includes('카드')) {
+              spanIcon.textContent = '💳';
+            } else if (payment.payment.includes('현금')) {
+              spanIcon.textContent = '💵';
+            } else {
+              spanIcon.textContent = '💰';
+            }
+            
+            label.appendChild(radio);
+            label.appendChild(spanLabel);
+            label.appendChild(spanIcon);
+            paymentMethods.appendChild(label);
+            
+            // 라디오 버튼 클릭 이벤트
+            radio.addEventListener('change', function() {
+              if (this.checked) {
+                selectedPayment = parseInt(this.value);
+                // 모든 옵션에서 selected 클래스 제거
+                document.querySelectorAll('.payment-option').forEach(opt => {
+                  opt.classList.remove('selected');
+                });
+                // 선택된 옵션에 selected 클래스 추가
+                this.closest('.payment-option').classList.add('selected');
+              }
+            });
+            
+            // 라벨 클릭 시 라디오 버튼 선택
+            label.addEventListener('click', function(e) {
+              if (e.target !== radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change'));
+              }
+            });
+          });
+        }
+      } catch (error) {
+        console.error('지불방식 로드 오류:', error);
+        paymentMethods.innerHTML = '<p style="color: #dc3545; text-align: center;">지불방식을 불러올 수 없습니다.</p>';
+      }
+    }
+
+    // 금액 계산
+    function calculateTotal() {
+      const originalPrice = cartData.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      let discount = 0;
+      
+      if (selectedCoupon && selectedCoupon.discount) {
+        discount = selectedCoupon.discount;
+      }
+      
+      const totalPrice = originalPrice - discount;
+      
+      document.getElementById('originalPrice').textContent = originalPrice.toLocaleString() + '원';
+      document.getElementById('discountPrice').textContent = '-' + discount.toLocaleString() + '원';
+      document.getElementById('totalPrice').textContent = totalPrice.toLocaleString() + '원';
+      
+      const discountRow = document.getElementById('discountRow');
+      if (discount > 0) {
+        discountRow.style.display = 'flex';
+      } else {
+        discountRow.style.display = 'none';
+      }
+    }
+
+    async function onConfigChange(config) {
+      document.getElementById('pageTitle').textContent = config.page_title || defaultConfig.page_title;
+      document.getElementById('orderBtn').textContent = config.order_button_text || defaultConfig.order_button_text;
+      
+      const bgColor = config.background_color || defaultConfig.background_color;
+      const primaryColor = config.primary_color || defaultConfig.primary_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const borderColor = config.border_color || defaultConfig.border_color;
+      const fontFamily = config.font_family || defaultConfig.font_family;
+      const fontSize = config.font_size || defaultConfig.font_size;
+      
+      document.querySelector('.app-container').style.backgroundColor = bgColor;
+      document.querySelector('.top-bar').style.backgroundColor = bgColor;
+      document.querySelector('.order-section').style.backgroundColor = bgColor;
+      
+      document.querySelector('.page-title').style.color = textColor;
+      document.querySelector('.page-title').style.fontFamily = `${fontFamily}, sans-serif`;
+      document.querySelector('.page-title').style.fontSize = `${fontSize * 1.5}px`;
+      
+      document.querySelectorAll('.section-title, .menu-name, .address-text, .payment-label').forEach(el => {
+        el.style.color = textColor;
+        el.style.fontFamily = `${fontFamily}, sans-serif`;
+      });
+      
+      document.querySelectorAll('.menu-price').forEach(el => {
+        el.style.color = primaryColor;
+      });
+      
+      document.querySelectorAll('.section, .address-box, .payment-option').forEach(el => {
+        el.style.borderColor = borderColor;
+      });
+      
+      document.querySelector('.order-btn').style.backgroundColor = primaryColor;
+      document.querySelector('.order-btn').style.fontFamily = `${fontFamily}, sans-serif`;
+      document.querySelector('.order-btn').style.fontSize = `${fontSize * 1.125}px`;
+      
+      document.querySelector('.change-address-btn').style.color = primaryColor;
+      document.querySelector('.change-address-btn').style.borderColor = primaryColor;
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
+              window.elementSdk.setConfig({ background_color: value });
+            }
+          },
+          {
+            get: () => config.primary_color || defaultConfig.primary_color,
+            set: (value) => {
+              config.primary_color = value;
+              window.elementSdk.setConfig({ primary_color: value });
+            }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
+              window.elementSdk.setConfig({ text_color: value });
+            }
+          },
+          {
+            get: () => config.border_color || defaultConfig.border_color,
+            set: (value) => {
+              config.border_color = value;
+              window.elementSdk.setConfig({ border_color: value });
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (value) => {
+            config.font_family = value;
+            window.elementSdk.setConfig({ font_family: value });
+          }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (value) => {
+            config.font_size = value;
+            window.elementSdk.setConfig({ font_size: value });
+          }
+        }
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['page_title', config.page_title || defaultConfig.page_title],
+        ['order_button_text', config.order_button_text || defaultConfig.order_button_text]
+      ]);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+
+    // 초기 로드
+    loadCartData();
+    loadAddress();
+    loadCoupons();
+    loadStorePayments();
+
+    // 뒤로가기 버튼
+    document.getElementById('backBtn').addEventListener('click', () => {
+    window.location.href = '/customer/orderlist';
+    });
+    /* document.getElementById('backBtn').addEventListener('click', () => {
+      window.history.back();
+    }); */
+
+    // 주소 변경 버튼 - 설정 페이지로 이동
+    document.getElementById('changeAddressBtn').addEventListener('click', () => {
+      if (confirm('설정 페이지에서 주소를 변경하시겠습니까?')) {
+        window.location.href = '/users/setting';
+      }
+    });
+
+    // 쿠폰 선택
+    document.getElementById('couponSelect').addEventListener('change', (e) => {
+      if (e.target.value) {
+        selectedCoupon = JSON.parse(e.target.value);
+      } else {
+        selectedCoupon = null;
+      }
+      calculateTotal();
+    });
+
+    // 결제 방식 선택은 loadStorePayments() 함수 내에서 처리됨
+
+    // 주문하기 버튼 - 백엔드 API 연동
+    document.getElementById('orderBtn').addEventListener('click', async () => {
+      // 유효성 검사
+      if (cartData.length === 0) {
+        alert('주문할 상품이 없습니다.');
+        return;
+      }
+      
+      if (!selectedPayment) {
+        alert('결제 방식을 선택해주세요.');
+        return;
+      }
+      
+      // URL에서 store_id 가져오기
+      const urlParams = new URLSearchParams(window.location.search);
+      const storeId = urlParams.get('store_id');
+      
+      if (!storeId) {
+        alert('가게 정보를 찾을 수 없습니다.');
+        return;
+      }
+      
+      // 가게 정보 가져오기 (minprice 확인용)
+      let storeMinprice = 0;
+      try {
+        const storeRes = await fetch(`/stores/${storeId}`);
+        if (storeRes.ok) {
+          const store = await storeRes.json();
+          // minprice에서 "원" 제거하고 숫자로 변환
+          const minpriceStr = store.minprice ? store.minprice.replace(/원/g, '').replace(/,/g, '') : '0';
+          storeMinprice = parseInt(minpriceStr) || 0;
+        }
+      } catch (e) {
+        console.error('가게 정보 조회 실패');
+      }
+      
+      // 사용자 주소 가져오기
+      let userAddress = '';
+      try {
+        const userRes = await fetch('/users/me');
+        if (userRes.ok) {
+          const user = await userRes.json();
+          userAddress = user.address || '';
+        }
+      } catch (e) {
+        console.error('사용자 정보 조회 실패');
+      }
+      
+      if (!userAddress) {
+        alert('배송지를 등록해주세요. 설정 페이지에서 주소를 등록할 수 있습니다.');
+        return;
+      }
+      
+      // 주문 내용 생성 (메뉴 목록을 문자열로)
+      const orderItems = cartData.map(item => `${item.menuName} x${item.quantity}`).join(', ');
+      
+      // 총 금액 계산
+      let totalPrice = cartData.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      if (selectedCoupon && selectedCoupon.discount) {
+        totalPrice -= selectedCoupon.discount;
+      }
+      
+      // 최소주문금액 확인
+      if (storeMinprice > 0 && totalPrice < storeMinprice) {
+        alert(`최소주문금액이 부족합니다.\n최소주문금액: ${storeMinprice.toLocaleString()}원\n현재 금액: ${totalPrice.toLocaleString()}원`);
+        return;
+      }
+      
+      // 주문 데이터 생성 (rider_id는 백엔드에서 0으로 설정됨)
+      const orderData = {
+        store_id: parseInt(storeId),
+        order: orderItems,
+        total_price: totalPrice,
+        payment_id: selectedPayment // 선택된 결제 방식 ID 전송
+      };
+      
+      try {
+        // 백엔드 API로 주문 생성
+        const response = await fetch('/customer/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(orderData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          alert('주문이 완료되었습니다!');
+          
+          // 장바구니 비우기
+          localStorage.removeItem('cart');
+          
+          // 메인 페이지로 이동
+          window.location.href = '/customer/main';
+        } else {
+          if (response.status === 401) {
+            alert('로그인이 필요합니다.');
+            window.location.href = '/users/firstpage';
+          } else {
+            alert(data.error || '주문에 실패했습니다.');
+          }
+        }
+      } catch (error) {
+        console.error('주문 오류:', error);
+        alert('주문 중 오류가 발생했습니다.');
+      }
+    });
+  </script>
+</html>

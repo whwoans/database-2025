@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>라이더 페이지</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #f8f9fa;
+  font-family: 'Jua', sans-serif;
+}
+
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #fff;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+/* 상단바 */
+.top-bar {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 2px solid #eee;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: bold;
+  flex: 1;
+  text-align: center;
+  margin-right: 35px;
+}
+
+/* 주문 카드 */
+.order-card {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px;
+}
+
+.order-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.order-text {
+  font-size: 16px;
+  color: #555;
+  margin: 4px 0;
+}
+
+.order-btns {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.accept-btn, .deny-btn, .done-btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  margin-right: 8px;
+  font-family: 'Jua', sans-serif;
+}
+
+.accept-btn { background: #00d2be; }
+.deny-btn { background: #ff7675; }
+.done-btn { background: #6c5ce7; }
+
+.accept-btn:last-child, 
+.deny-btn:last-child,
+.done-btn:last-child {
+  margin-right: 0;
+}
+
+.empty-box {
+  text-align: center;
+  margin-top: 50px;
+  color: #aaa;
+  font-size: 18px;
+}
+</style>
+</head>
+
+<body>
+<div class="app-container">
+
+  <!-- 상단바 -->
+  <header class="top-bar">
+    <button class="back-btn" onclick="location.href='/users/setting'">←</button>
+    <h1 class="page-title">라이더 페이지</h1>
+  </header>
+
+  <!-- 라이더 등록 폼 (처음 접속 시) -->
+  <div id="riderRegistrationForm" style="display: none;">
+    <div style="padding: 20px;">
+      <h2 style="font-size: 20px; margin-bottom: 20px; text-align: center;">라이더 정보 등록</h2>
+      
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-size: 16px; margin-bottom: 8px;">핸드폰 번호</label>
+        <input type="text" id="riderPhone" placeholder="010-1234-5678" style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-family: 'Jua', sans-serif; font-size: 16px; box-sizing: border-box;">
+      </div>
+      
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 16px; margin-bottom: 8px;">이동수단</label>
+        <select id="riderVehicle" style="width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-family: 'Jua', sans-serif; font-size: 16px; box-sizing: border-box;">
+          <option value="">이동수단 선택</option>
+          <option value="오토바이">오토바이</option>
+          <option value="자전거">자전거</option>
+          <option value="도보">도보</option>
+          <option value="자동차">자동차</option>
+        </select>
+      </div>
+      
+      <button id="registerRiderBtn" style="width: 100%; padding: 16px; background-color: #00d2be; color: white; border: none; border-radius: 10px; font-family: 'Jua', sans-serif; font-size: 18px; font-weight: bold; cursor: pointer;">등록하기</button>
+    </div>
+  </div>
+
+  <!-- 주문 목록 (등록 후) -->
+  <div id="orderList"></div>
+
+</div>
+
+<script>
+// =====================================
+// 1) 라이더 등록 여부 확인 및 화면 분기
+// =====================================
+let user = null;
+let rider = null;
+
+async function checkRiderRegistration() {
+  try {
+    // 현재 로그인한 사용자 정보 확인
+    const userResponse = await fetch('/users/me');
+    
+    if (!userResponse.ok) {
+      if (userResponse.status === 401) {
+        alert('로그인이 필요합니다.');
+        window.location.href = '/users/firstpage';
+        return;
+      }
+      throw new Error('사용자 정보를 불러오는데 실패했습니다.');
+    }
+
+    user = await userResponse.json();
+
+    // User의 user_id로 Rider 조회
+    const riderResponse = await fetch(`/riders/by-user-id/${user.user_id}`);
+    
+    if (riderResponse.ok) {
+      rider = await riderResponse.json();
+      // 라이더가 등록되어 있으면 주문 목록 표시
+      document.getElementById('riderRegistrationForm').style.display = 'none';
+      document.getElementById('orderList').style.display = 'block';
+      await loadOrders();
+    } else {
+      // 라이더가 등록되어 있지 않으면 등록 폼 표시
+      document.getElementById('riderRegistrationForm').style.display = 'block';
+      document.getElementById('orderList').style.display = 'none';
+    }
+  } catch (error) {
+    console.error('라이더 확인 오류:', error);
+    // 오류 시 등록 폼 표시
+    document.getElementById('riderRegistrationForm').style.display = 'block';
+    document.getElementById('orderList').style.display = 'none';
+  }
+}
+
+// =====================================
+// 2) 라이더 등록
+// =====================================
+async function registerRider() {
+  const phone = document.getElementById('riderPhone').value.trim();
+  const vehicle = document.getElementById('riderVehicle').value;
+
+  if (!phone) {
+    alert('핸드폰 번호를 입력해주세요.');
+    return;
+  }
+
+  if (!vehicle) {
+    alert('이동수단을 선택해주세요.');
+    return;
+  }
+
+  if (!user) {
+    alert('로그인이 필요합니다.');
+    return;
+  }
+
+  try {
+    const response = await fetch('/riders/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        rider_id: user.user_id, // User의 user_id를 rider_id로 사용
+        phone: phone,
+        vehicle: vehicle
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert('라이더 등록이 완료되었습니다!');
+      // 등록 후 주문 목록 화면으로 전환
+      await checkRiderRegistration();
+    } else {
+      alert(data.error || '라이더 등록에 실패했습니다.');
+    }
+  } catch (error) {
+    console.error('라이더 등록 오류:', error);
+    alert('라이더 등록 중 오류가 발생했습니다.');
+  }
+}
+
+// =====================================
+// 3) 백엔드 API에서 주문 정보 불러오기
+// =====================================
+async function loadOrders() {
+  try {
+    // 대기 중인 주문 목록 가져오기 (라이더가 수락할 수 있는 주문)
+    const ordersResponse = await fetch('/customer/orders/waiting');
+    
+    if (ordersResponse.ok) {
+      const waitingOrders = await ordersResponse.json();
+      renderOrders(waitingOrders);
+    } else {
+      renderOrders([]);
+    }
+  } catch (error) {
+    console.error('주문 로드 오류:', error);
+    renderOrders([]);
+  }
+}
+
+// =====================================
+// 2) 화면 렌더링
+// =====================================
+function renderOrders(waitingOrders) {
+  const box = document.getElementById("orderList");
+  box.innerHTML = "";
+
+  if (waitingOrders.length === 0) {
+    box.innerHTML = `<p class="empty-box">대기 중인 주문이 없습니다 🚴‍♂️</p>`;
+    return;
+  }
+
+  waitingOrders.forEach(order => {
+    const div = document.createElement("div");
+    div.className = "order-card";
+
+    div.innerHTML = `
+      <div class="order-title">${order.store_name || '가게명 없음'}</div>
+      <div class="order-text">주문자: ${order.user_name || '사용자'}</div>
+      <div class="order-text">주소: ${order.user_address || '주소 없음'}</div>
+      <div class="order-text">주문 내용: ${order.order || '주문 내용 없음'}</div>
+      <div class="order-text">총 금액: ${order.total_price?.toLocaleString() || 0}원</div>
+
+      <div class="order-btns">
+        <button class="accept-btn" onclick="acceptOrder(${order.id})">수락</button>
+        <button class="deny-btn" onclick="denyOrder(${order.id})">거절</button>
+      </div>
+    `;
+
+    box.appendChild(div);
+  });
+}
+
+// =====================================
+// 3) 수락 / 거절 / 완료 기능 - 백엔드 API 연동
+// =====================================
+async function acceptOrder(orderId) {
+  if (!user || !rider) {
+    alert('라이더 등록이 필요합니다.');
+    return;
+  }
+
+  try {
+    // Rider ID로 주문 수락
+    const response = await fetch(`/customer/orders/${orderId}/accept`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        rider_id: rider.id  // Rider ID 사용
+      })
+    });
+
+    if (response.ok) {
+      alert("주문을 수락했습니다!");
+      // 주문 목록 다시 불러오기
+      await loadOrders();
+    } else {
+      const data = await response.json();
+      alert(data.error || "주문 수락에 실패했습니다.");
+    }
+  } catch (error) {
+    console.error('주문 수락 오류:', error);
+    alert("주문 수락 중 오류가 발생했습니다.");
+  }
+}
+
+async function denyOrder(orderId) {
+  if (!confirm("정말 주문을 거절하시겠습니까?")) return;
+
+  try {
+    // 주문 거절은 단순히 무시 (실제로는 주문 상태 변경 API 필요)
+    alert("주문을 거절했습니다.");
+    // 주문 목록 다시 불러오기
+    await loadOrders();
+  } catch (error) {
+    console.error('주문 거절 오류:', error);
+    alert("주문 거절 중 오류가 발생했습니다.");
+  }
+}
+
+async function finishOrder(orderId) {
+  if (!confirm("배달을 완료하시겠습니까?")) return;
+
+  try {
+    // 배달 완료 API
+    const response = await fetch(`/customer/orders/${orderId}/complete`, {
+      method: 'POST'
+    });
+
+    if (response.ok) {
+      alert("배달이 완료되었습니다!");
+      // 주문 목록 다시 불러오기
+      await loadOrders();
+    } else {
+      const data = await response.json();
+      alert(data.error || "배달 완료 처리에 실패했습니다.");
+    }
+  } catch (error) {
+    console.error('배달 완료 오류:', error);
+    alert("배달 완료 처리 중 오류가 발생했습니다.");
+  }
+}
+
+// =====================================
+// FastAPI 교체 예정 (참고)
+// =====================================
+/*
+fetch("/api/orders/waiting")
+fetch("/api/orders/{id}/accept")
+fetch("/api/orders/{id}/deny")
+fetch("/api/orders/{id}/deliver")
+*/
+
+// =====================================
+// 초기 화면
+// =====================================
+// 등록 버튼 이벤트
+document.getElementById('registerRiderBtn').addEventListener('click', registerRider);
+
+// 초기 로드 - 라이더 등록 여부 확인
+checkRiderRegistration();
+</script>
+
+</body>
+</html>

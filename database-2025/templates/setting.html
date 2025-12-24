@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>설정</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Jua', sans-serif;
+      background-color: #f8f9fa;
+      overflow-x: hidden;
+    }
+
+    .app-container {
+      max-width: 480px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      min-height: 100vh;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      box-sizing: border-box;
+      overflow-x: hidden;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 2px solid #e9ecef;
+      position: sticky;
+      top: 0;
+      background-color: #ffffff;
+      z-index: 10;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 8px;
+      transition: 0.2s;
+    }
+    .back-btn:hover { transform: scale(1.1); }
+
+    .page-title {
+      flex: 1;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      margin-right: 20px;
+    }
+
+    .content { 
+      padding: 20px; 
+      box-sizing: border-box;
+    }
+
+    .input-group { 
+      margin-bottom: 18px; 
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .label { 
+      font-size: 15px; 
+      margin-bottom: 6px; 
+      display: block;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      background-color: #ffffff;
+      font-family: 'Jua', sans-serif;
+      transition: 0.2s;
+      box-sizing: border-box;
+      max-width: 100%;
+    }
+
+    .input-field:focus {
+      border-color: #00d2be;
+      outline: none;
+    }
+
+    .save-btn {
+      width: 100%;
+      background-color: #00d2be;
+      color: white;
+      border: none;
+      padding: 14px;
+      font-size: 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: 0.2s;
+      box-sizing: border-box;
+      max-width: 100%;
+    }
+    .save-btn:hover {
+      background-color: #00b8a6;
+      transform: translateY(-2px);
+    }
+
+    .menu-btn {
+      width: 100%;
+      margin-top: 14px;
+      padding: 14px;
+      font-size: 18px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background-color: #2d3436;
+      color: white;
+      transition: 0.2s;
+      box-sizing: border-box;
+      max-width: 100%;
+    }
+    .menu-btn:hover { transform: translateY(-2px); }
+
+    .logout-btn {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      font-size: 18px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background-color: #dc3545;
+      color: white;
+      transition: 0.2s;
+      box-sizing: border-box;
+      max-width: 100%;
+    }
+    .logout-btn:hover {
+      background-color: #c82333;
+      transform: translateY(-2px);
+    }
+
+  </style>
+</head>
+
+<body>
+<div class="app-container">
+
+  <!-- 상단바 -->
+  <header class="top-bar">
+    <button class="back-btn" onclick="location.href='/customer/main'">←</button>
+    <h1 class="page-title">설정</h1>
+  </header>
+
+  <main class="content">
+
+    <!-- 아이디 -->
+    <div class="input-group">
+      <p class="label">아이디</p>
+      <input type="text" id="userIdInput" class="input-field" disabled>
+    </div>
+
+    <!-- 이름 -->
+    <div class="input-group">
+      <p class="label">이름</p>
+      <input type="text" id="userNameInput" class="input-field">
+    </div>
+
+    <!-- 전화번호 -->
+    <div class="input-group">
+      <p class="label">전화번호</p>
+      <input type="text" id="userPhoneInput" class="input-field">
+    </div>
+
+    <!-- 주소 -->
+    <div class="input-group">
+      <p class="label">주소</p>
+      <input type="text" id="userAddressInput" class="input-field">
+    </div>
+
+    <!-- 비밀번호 -->
+    <div class="input-group">
+      <p class="label">비밀번호</p>
+      <input type="password" id="userPwInput" class="input-field">
+    </div>
+
+    <!-- 저장 -->
+    <button class="save-btn" id="saveBtn">저장하기</button>
+
+    <!-- 페이지 이동 -->
+    <button class="menu-btn" onclick="location.href='/owners/page'">사장님 페이지</button>
+    <button class="menu-btn" onclick="location.href='/riders/page'">라이더 페이지</button>
+
+    <!-- 로그아웃 -->
+    <button class="logout-btn" id="logoutBtn">로그아웃</button>
+
+  </main>
+</div>
+
+<script>
+  /* =====================================================
+     1) 백엔드 API에서 현재 로그인된 사용자 정보 불러오기
+  ====================================================== */
+  let currentUser = null;
+  let userId = null;
+
+  async function loadUserInfo() {
+    try {
+      // 현재 로그인한 사용자 정보 조회
+      const response = await fetch('/users/me');
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          alert("로그인이 필요합니다.");
+          window.location.href = "/users/firstpage";
+          return;
+        }
+        throw new Error('사용자 정보를 불러오는데 실패했습니다.');
+      }
+
+      const user = await response.json();
+      currentUser = user;
+      userId = user.id;
+
+      // 기존 정보 입력
+      document.getElementById("userIdInput").value = user.user_id || "";
+      document.getElementById("userNameInput").value = user.name || "";
+      document.getElementById("userPhoneInput").value = ""; // 전화번호는 User 모델에 없음
+      document.getElementById("userAddressInput").value = user.address || "";
+      document.getElementById("userPwInput").value = ""; // 비밀번호는 보안상 표시하지 않음
+      
+    } catch (error) {
+      console.error('사용자 정보 로드 오류:', error);
+      // 로그인하지 않은 경우로 간주
+      alert("로그인이 필요합니다.");
+      window.location.href = "/users/firstpage";
+    }
+  }
+
+  loadUserInfo();
+
+/* =====================================================
+   2) 저장하기 버튼 - 백엔드 API 연동
+====================================================== */
+document.getElementById("saveBtn").addEventListener("click", async () => {
+
+  const newAddress = document.getElementById("userAddressInput").value.trim();
+
+  if (!newAddress) {
+    alert("주소를 입력해주세요.");
+    return;
+  }
+
+  try {
+    // 주소 수정 API 호출
+    const response = await fetch('/users/modify/address', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        address: newAddress
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert("주소가 저장되었습니다!");
+      // 필요시 페이지 새로고침
+      // window.location.reload();
+    } else {
+      if (response.status === 401) {
+        alert("로그인이 필요합니다.");
+        window.location.href = "/users/firstpage";
+      } else {
+        alert(data.error || "저장에 실패했습니다.");
+      }
+    }
+  } catch (error) {
+    console.error('저장 오류:', error);
+    alert("저장 중 오류가 발생했습니다.");
+  }
+});
+
+  /* =====================================================
+     3) 로그아웃 기능 - 백엔드 API 연동
+  ====================================================== */
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    try {
+      const response = await fetch('/users/logout', {
+        method: 'POST'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // 로컬 스토리지도 정리 (장바구니 등)
+        localStorage.removeItem("cart");
+        
+        alert("로그아웃되었습니다.");
+        window.location.href = "/users/firstpage";
+      } else {
+        alert(data.error || "로그아웃에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error('로그아웃 오류:', error);
+      // 에러가 나도 로그아웃 처리
+      localStorage.removeItem("cart");
+      window.location.href = "/users/firstpage";
+    }
+  });
+</script>
+
+</body>
+</html>

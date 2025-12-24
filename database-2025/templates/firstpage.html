@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>배달 앱</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap');
+
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Jua', sans-serif;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100%;
+      background: linear-gradient(135deg, #ffffff 0%, #f0f9f9 100%);
+      padding: 40px 20px;
+    }
+
+    .app-name {
+      font-size: 56px;
+      font-weight: bold;
+      color: #2d3436;
+      margin-bottom: 16px;
+      text-align: center;
+      font-family: 'Black Han Sans', sans-serif;
+    }
+
+    .app-name-small {
+      font-size: 28px;
+    }
+
+    .app-name-large {
+      font-size: 56px;
+    }
+
+    .welcome-text {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2d3436;
+      margin-bottom: 40px;
+      text-align: center;
+      font-family: 'Black Han Sans', sans-serif;
+    }
+
+    .login-form {
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-label {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2d3436;
+      font-family: 'Jua', sans-serif;
+    }
+
+    .input-field {
+      padding: 14px 16px;
+      font-size: 16px;
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      font-family: 'Jua', sans-serif;
+      transition: all 0.3s ease;
+      background-color: #ffffff;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: #00d2be;
+      box-shadow: 0 0 0 3px rgba(0, 210, 190, 0.1);
+    }
+
+    .input-field::placeholder {
+      color: #adb5bd;
+    }
+
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      padding: 16px 40px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Jua', sans-serif;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .btn-login {
+      background-color: #00d2be;
+      color: white;
+    }
+
+    .btn-signup {
+      background-color: #2d3436;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <div class="app-name">
+      맛집 <span class="app-name-large">D</span><span class="app-name-small">elivery</span> 
+      <span class="app-name-large">B</span><span class="app-name-small">ase</span>
+    </div>
+
+    <h1 class="welcome-text">환영합니다</h1>
+
+    <form class="login-form" id="loginForm">
+      <div class="input-group">
+        <label class="input-label">아이디 :</label>
+        <input type="text" id="userId" class="input-field" placeholder="아이디를 입력하세요">
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">비밀번호 :</label>
+        <input type="password" id="userPassword" class="input-field" placeholder="비밀번호를 입력하세요">
+      </div>
+
+      <div class="button-container">
+        <button class="btn btn-login" type="submit">로그인</button>
+        <button class="btn btn-signup" type="button" id="signupBtn">회원가입</button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    // =============== 로그인 처리 ===============
+
+    document.getElementById("loginForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+
+      const id = document.getElementById("userId").value.trim();
+      const pw = document.getElementById("userPassword").value.trim();
+
+      if (!id || !pw) {
+        alert("아이디와 비밀번호를 입력해주세요.");
+        return;
+      }
+
+      // 백엔드 API로 로그인 요청
+      try {
+        const response = await fetch("/users/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            user_id: id,
+            passwd: pw
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // 로그인 성공
+          alert("로그인 성공!");
+          // 메인페이지로 이동
+          window.location.href = "/customer/main";
+        } else {
+          alert(data.error || "아이디 또는 비밀번호가 틀립니다.");
+        }
+      } catch (error) {
+        console.error("로그인 오류:", error);
+        alert("로그인 중 오류가 발생했습니다.");
+      }
+    });
+
+    // 회원가입 페이지 이동
+    document.getElementById("signupBtn").addEventListener("click", () => {
+      window.location.href = "/users/signup";
+    });
+
+  </script>
+</body>
+</html>

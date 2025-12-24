@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사장님 페이지</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #f8f9fa;
+  font-family: 'Jua', sans-serif;
+}
+
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+  background: #fff;
+  min-height: 100vh;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* 상단바 */
+.top-bar {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 2px solid #eee;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: bold;
+  flex: 1;
+  text-align: center;
+  margin-right: 35px;
+}
+
+/* 본문 */
+.section {
+  padding: 20px;
+}
+
+.label {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.input-box, textarea, select {
+  width: 100%;
+  font-family: 'Jua', sans-serif;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+textarea {
+  resize: none;
+  height: 90px;
+}
+
+/* 메뉴 리스트 */
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.menu-name {
+  font-size: 17px;
+}
+
+.menu-delete {
+  background: #ff6b6b;
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+/* 리뷰 삭제 */
+.review-item {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.review-delete {
+  background: #ff6b6b;
+  border: none;
+  color: #fff;
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+/* 저장 버튼 */
+.save-btn {
+  width: 90%;
+  margin: 20px auto;
+  display: block;
+  padding: 16px;
+  background: #00d2be;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 20px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="app-container">
+
+  <!-- 상단바 -->
+  <header class="top-bar">
+    <button class="back-btn" onclick="location.href='/users/setting'">←</button>
+    <h1 class="page-title">사장님 페이지</h1>
+  </header>
+
+  <!-- 본문 -->
+  <div class="section">
+
+    <div class="label">가게 이름</div>
+    <input type="text" id="storeName" class="input-box" placeholder="가게 이름을 입력하세요">
+
+    <div class="label">카테고리</div>
+    <select id="storeCategory">
+      <option value="">카테고리 선택</option>
+    </select>
+
+    <div class="label">전화번호</div>
+    <input type="text" id="storePhone" class="input-box" placeholder="전화번호를 입력하세요 (예: 02-1234-5678)">
+
+    <div class="label">최소주문금액</div>
+    <input type="text" id="storeMinprice" class="input-box" placeholder="최소주문금액을 입력하세요 (예: 15000원)">
+
+    <div class="label">운영시간</div>
+    <input type="text" id="storeOperationTime" class="input-box" placeholder="운영시간을 입력하세요 (예: 09:00 - 22:00)">
+
+    <div class="label">휴무일</div>
+    <input type="text" id="storeClosedDay" class="input-box" placeholder="휴무일을 입력하세요 (예: 월요일)">
+
+    <div class="label">지불방식 (여러 개 선택 가능)</div>
+    <div id="paymentMethods" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+      <!-- 지불방식 체크박스들이 여기에 동적으로 추가됩니다 -->
+    </div>
+
+    <div class="label">가게 정보 (설명 / 운영시간 / 휴무일 / 배달팁 등)</div>
+    <textarea id="storeDescription" placeholder="가게 정보를 입력하세요"></textarea>
+
+    <hr style="margin:20px 0; border:1px solid #eee;">
+
+    <div class="label">메뉴 추가</div>
+    <input type="text" id="menuName" class="input-box" placeholder="메뉴 이름">
+    <input type="number" id="menuPrice" class="input-box" placeholder="가격">
+
+    <button class="save-btn" style="background:#6c5ce7" onclick="addMenu()">메뉴 추가하기</button>
+
+    <div class="label">등록된 메뉴</div>
+    <div id="menuList"></div>
+
+    <hr style="margin:20px 0; border:1px solid #eee;">
+
+    <div class="label">쿠폰 관리</div>
+    <div style="margin-bottom: 15px; padding: 15px; background: #f8f9fa; border-radius: 10px; border: 2px solid #e9ecef;">
+      <input type="number" id="couponDiscount" class="input-box" placeholder="할인 금액 입력 (예: 1000)" style="margin-bottom: 10px;">
+      <input type="number" id="couponPeriod" class="input-box" placeholder="유효기간 (일)" style="margin-bottom: 10px;">
+      <button class="save-btn" style="background:#6c5ce7; margin: 0;" onclick="addCoupon()">쿠폰 추가하기</button>
+    </div>
+    <div class="label">등록된 쿠폰</div>
+    <div id="couponList"></div>
+
+    <hr style="margin:20px 0; border:1px solid #eee;">
+
+    <div class="label">리뷰 관리 (삭제만 가능)</div>
+    <div id="reviewList"></div>
+
+    <button class="save-btn" onclick="saveStore()">저장하기</button>
+  </div>
+
+</div>
+
+<script>
+// ===============================
+// 백엔드 API에서 사장님 정보 및 가게 정보 불러오기
+// ===============================
+let owner = null;
+let myStore = null;
+let myStoreId = null;
+let categories = [];
+
+// 카테고리 목록 불러오기
+async function loadCategories() {
+  try {
+    const response = await fetch('/customer/categories');
+    if (response.ok) {
+      categories = await response.json();
+      const select = document.getElementById('storeCategory');
+      select.innerHTML = '<option value="">카테고리 선택</option>';
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.id;
+        option.textContent = cat.category;
+        select.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error('카테고리 로드 오류:', error);
+  }
+}
+
+let paymentMethods = [];
+
+// 지불방식 목록 불러오기
+async function loadPaymentMethods() {
+  try {
+    const response = await fetch('/customer/payment-methods');
+    if (response.ok) {
+      paymentMethods = await response.json();
+      renderPaymentMethods();
+    }
+  } catch (error) {
+    console.error('지불방식 로드 오류:', error);
+  }
+}
+
+// 지불방식 체크박스 렌더링
+function renderPaymentMethods() {
+  const container = document.getElementById('paymentMethods');
+  container.innerHTML = '';
+  
+  paymentMethods.forEach(pm => {
+    const label = document.createElement('label');
+    label.style.display = 'flex';
+    label.style.alignItems = 'center';
+    label.style.gap = '8px';
+    label.style.cursor = 'pointer';
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = pm.id;
+    checkbox.id = `payment_${pm.id}`;
+    checkbox.style.width = '20px';
+    checkbox.style.height = '20px';
+    checkbox.style.cursor = 'pointer';
+    
+    const span = document.createElement('span');
+    span.textContent = pm.method_name;
+    span.style.fontSize = '16px';
+    
+    label.appendChild(checkbox);
+    label.appendChild(span);
+    container.appendChild(label);
+  });
+}
+
+async function loadOwnerData() {
+  try {
+    // 카테고리 목록과 지불방식 목록 먼저 로드
+    await Promise.all([loadCategories(), loadPaymentMethods()]);
+
+    // 현재 로그인한 사용자 정보 확인 (User 세션 사용)
+    const userResponse = await fetch('/users/me');
+    
+    if (!userResponse.ok) {
+      if (userResponse.status === 401) {
+        alert('로그인이 필요합니다.');
+        window.location.href = '/users/firstpage';
+        return;
+      }
+      throw new Error('사용자 정보를 불러오는데 실패했습니다.');
+    }
+
+    const user = await userResponse.json();
+    owner = { id: user.id }; // User ID를 owner ID로 사용
+
+    // 사용자의 가게 정보 가져오기 (User ID를 owner_id로 사용)
+    const storesResponse = await fetch(`/stores/owner/${user.id}`);
+    
+    if (storesResponse.ok) {
+      const stores = await storesResponse.json();
+      if (stores.length > 0) {
+        myStore = stores[0]; // 첫 번째 가게 사용
+        myStoreId = myStore.id;
+
+        // 가게 정보 화면에 반영
+        document.getElementById('storeName').value = myStore.store_name || "";
+        // category_id로 카테고리 선택
+        if (myStore.category_id) {
+          document.getElementById('storeCategory').value = myStore.category_id;
+        }
+        document.getElementById('storePhone').value = myStore.phone || "";
+        document.getElementById('storeMinprice').value = myStore.minprice || "";
+        document.getElementById('storeOperationTime').value = myStore.operationTime || "";
+        document.getElementById('storeClosedDay').value = myStore.closedDay || "";
+        document.getElementById('storeDescription').value = myStore.information || ""; // 가게 정보
+
+        // 가게의 지불방식 정보 가져오기
+        await loadStorePaymentMethods();
+
+        // 메뉴 정보 가져오기
+        await loadMenus();
+        // 쿠폰 정보 가져오기
+        await loadCoupons();
+        // 리뷰 정보 가져오기
+        await loadReviews();
+      } else {
+        // 가게가 없으면 빈 상태로 시작
+        renderMenus([]);
+        renderCoupons([]);
+        renderReviews([]);
+      }
+    } else {
+      renderMenus([]);
+      renderCoupons([]);
+      renderReviews([]);
+    }
+  } catch (error) {
+    console.error('데이터 로드 오류:', error);
+    alert('데이터를 불러오는 중 오류가 발생했습니다.');
+    window.location.href = '/users/firstpage';
+  }
+}
+
+// 가게의 지불방식 정보 불러오기 (checkbox에 반영)
+async function loadStorePaymentMethods() {
+  if (!myStoreId) {
+    // 모든 체크박스 해제
+    document.querySelectorAll('#paymentMethods input[type="checkbox"]').forEach(cb => {
+      cb.checked = false;
+    });
+    return;
+  }
+
+  try {
+    const response = await fetch(`/customer/stores/${myStoreId}/payments`);
+    if (response.ok) {
+      const payments = await response.json();
+      // 모든 체크박스 해제
+      document.querySelectorAll('#paymentMethods input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+      });
+      // 가게의 지불방식만 체크
+      payments.forEach(payment => {
+        const checkbox = document.getElementById(`payment_${payment.id}`);
+        if (checkbox) {
+          checkbox.checked = true;
+        }
+      });
+    }
+  } catch (error) {
+    console.error('가게 지불방식 로드 오류:', error);
+  }
+}
+
+// 메뉴 정보 불러오기
+async function loadMenus() {
+  if (!myStoreId) {
+    renderMenus([]);
+    return;
+  }
+
+  try {
+    const response = await fetch(`/customer/stores/${myStoreId}/menus`);
+    if (response.ok) {
+      const menus = await response.json();
+      renderMenus(menus);
+    } else {
+      renderMenus([]);
+    }
+  } catch (error) {
+    console.error('메뉴 로드 오류:', error);
+    renderMenus([]);
+  }
+}
+
+// 리뷰 정보 불러오기
+async function loadReviews() {
+  if (!myStoreId) {
+    renderReviews([]);
+    return;
+  }
+
+  try {
+    const response = await fetch(`/reviews/store/${myStoreId}`);
+    if (response.ok) {
+      const reviews = await response.json();
+      renderReviews(reviews);
+    } else {
+      renderReviews([]);
+    }
+  } catch (error) {
+    console.error('리뷰 로드 오류:', error);
+    renderReviews([]);
+  }
+}
+
+// 초기 로드
+loadOwnerData();
+
+// ===============================
+// 메뉴 렌더링
+// ===============================
+function renderMenus(list) {
+  let area = document.getElementById("menuList");
+  area.innerHTML = "";
+
+  list.forEach((m) => {
+    let div = document.createElement("div");
+    div.className = "menu-item";
+    div.innerHTML = `
+      <span class="menu-name">${m.menu || m.name} - ${m.price.toLocaleString()}원</span>
+      <button class="menu-delete" onclick="deleteMenu(${m.id})">삭제</button>
+    `;
+    area.appendChild(div);
+  });
+}
+
+// 메뉴 추가 - 백엔드 API 연동
+async function addMenu() {
+  let name = menuName.value.trim();
+  let price = parseInt(menuPrice.value);
+
+  if (!name || !price) {
+    alert("메뉴 이름과 가격을 입력해주세요.");
+    return;
+  }
+
+  if (!myStoreId) {
+    alert("먼저 가게를 등록해주세요.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`/customer/stores/${myStoreId}/menus`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        menu: name,
+        price: price
+      })
+    });
+
+    if (response.ok) {
+      alert("메뉴가 추가되었습니다!");
+      menuName.value = "";
+      menuPrice.value = "";
+      // 메뉴 목록 다시 불러오기
+      await loadMenus();
+    } else {
+      const data = await response.json();
+      alert(data.error || "메뉴 추가에 실패했습니다.");
+    }
+  } catch (error) {
+    console.error('메뉴 추가 오류:', error);
+    alert("메뉴 추가 중 오류가 발생했습니다.");
+  }
+}
+
+// 메뉴 삭제 - 백엔드 API 연동
+async function deleteMenu(menuId) {
+  if (!confirm("정말 삭제하시겠습니까?")) return;
+
+  if (!myStoreId) return;
+
+  try {
+    const response = await fetch(`/customer/stores/${myStoreId}/menus/${menuId}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      alert("메뉴가 삭제되었습니다!");
+      // 메뉴 목록 다시 불러오기
+      await loadMenus();
+    } else {
+      const data = await response.json();
+      alert(data.error || "메뉴 삭제에 실패했습니다.");
+    }
+  } catch (error) {
+    console.error('메뉴 삭제 오류:', error);
+    alert("메뉴 삭제 중 오류가 발생했습니다.");
+  }
+}
+
+// ===============================
+// 쿠폰 정보 불러오기
+// ===============================
+async function loadCoupons() {
+  if (!myStoreId) {
+    renderCoupons([]);
+    return;
+  }
+
+  try {
+    const response = await fetch(`/coupons/store/${myStoreId}`);
+    if (response.ok) {
+      const coupons = await response.json();
+      renderCoupons(coupons);
+    } else {
+      renderCoupons([]);
+    }
+  } catch (error) {
+    console.error('쿠폰 로드 오류:', error);
+    renderCoupons([]);
+  }
+}
+
+// ===============================
+// 쿠폰 렌더링
+// ===============================
+function renderCoupons(list) {
+  let area = document.getElementById("couponList");
+  area.innerHTML = "";
+
+  if (list.length === 0) {
+    area.innerHTML = "<p style='color: #6c757d; text-align: center; padding: 20px;'>등록된 쿠폰이 없습니다.</p>";
+    return;
+  }
+
+  list.forEach((c) => {
+    let div = document.createElement("div");
+    div.className = "menu-item";
+    
+    // 할인 정보 표시 (입력한 값 그대로 표시)
+    let discountText = c.discount ? `${c.discount.toLocaleString()}` : '0';
+    let periodText = c.period ? `${c.period}일` : '기간 미설정';
+    
+    div.innerHTML = `
+      <div style="flex: 1;">
+        <span class="menu-name">${discountText} 할인 - 유효기간: ${periodText}</span>
+      </div>
+      <button class="menu-delete" onclick="deleteCoupon(${c.id})">삭제</button>
+    `;
+    area.appendChild(div);
+  });
+}
+
+// 쿠폰 추가 - 백엔드 API 연동
+async function addCoupon() {
+  const discount = parseInt(document.getElementById('couponDiscount').value);
+  const period = parseInt(document.getElementById('couponPeriod').value);
+
+  if (!discount || discount <= 0) {
+    alert("할인 금액을 입력해주세요.");
+    return;
+  }
+
+  if (!myStoreId) {
+    alert("먼저 가게를 등록해주세요.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`/coupons/store/${myStoreId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        discount: discount,
+        period: period || null
+      })
+    });
+
+    if (response.ok) {
+      alert("쿠폰이 추가되었습니다!");
+      document.getElementById('couponDiscount').value = "";
+      document.getElementById('couponPeriod').value = "";
+      // 쿠폰 목록 다시 불러오기
+      await loadCoupons();
+    } else {
+      const data = await response.json();
+      alert(data.error || "쿠폰 추가에 실패했습니다.");
+    }
+  } catch (error) {
+    console.error('쿠폰 추가 오류:', error);
+    alert("쿠폰 추가 중 오류가 발생했습니다.");
+  }
+}
+
+// 쿠폰 삭제 - 백엔드 API 연동
+async function deleteCoupon(couponId) {
+  if (!confirm("정말 삭제하시겠습니까?")) return;
+
+  if (!myStoreId) return;
+
+  try {
+    const response = await fetch(`/coupons/store/${myStoreId}/${couponId}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      alert("쿠폰이 삭제되었습니다!");
+      // 쿠폰 목록 다시 불러오기
+      await loadCoupons();
+    } else {
+      const data = await response.json();
+      alert(data.error || "쿠폰 삭제에 실패했습니다.");
+    }
+  } catch (error) {
+    console.error('쿠폰 삭제 오류:', error);
+    alert("쿠폰 삭제 중 오류가 발생했습니다.");
+  }
+}
+
+// ===============================
+// 리뷰 렌더링 + 삭제
+// ===============================
+function renderReviews(list) {
+  let area = document.getElementById("reviewList");
+  area.innerHTML = "";
+
+  list.forEach((r) => {
+    let div = document.createElement("div");
+    div.className = "review-item";
+    div.innerHTML = `
+      ⭐ ${r.rating} | ${r.user_id || '사용자'}<br>
+      ${r.review || r.text || ''}
+      <br><button class="review-delete" onclick="deleteReview(${r.id})">삭제</button>
+    `;
+    area.appendChild(div);
+  });
+}
+
+// 리뷰 삭제 - 백엔드 API 연동
+async function deleteReview(reviewId) {
+  if (!confirm("정말 삭제하시겠습니까?")) return;
+
+  if (!myStoreId) return;
+
+  try {
+    const response = await fetch(`/reviews/${reviewId}`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok) {
+      alert("리뷰가 삭제되었습니다!");
+      // 리뷰 목록 다시 불러오기
+      await loadReviews();
+    } else {
+      const data = await response.json();
+      alert(data.error || "리뷰 삭제에 실패했습니다.");
+    }
+  } catch (error) {
+    console.error('리뷰 삭제 오류:', error);
+    alert("리뷰 삭제 중 오류가 발생했습니다.");
+  }
+}
+
+// ===============================
+// 저장하기 - 백엔드 API 연동
+// ===============================
+async function saveStore() {
+  const name = document.getElementById('storeName').value.trim();
+  const categoryId = document.getElementById('storeCategory').value;
+  const phone = document.getElementById('storePhone').value.trim();
+  const minprice = document.getElementById('storeMinprice').value.trim();
+  const operationTime = document.getElementById('storeOperationTime').value.trim();
+  const closedDay = document.getElementById('storeClosedDay').value.trim();
+  const description = document.getElementById('storeDescription').value;
+  
+  // 선택된 지불방식들 가져오기
+  const selectedPayments = Array.from(document.querySelectorAll('#paymentMethods input[type="checkbox"]:checked'))
+    .map(cb => parseInt(cb.value));
+
+  // 모든 필수 필드 검증
+  if (!name) {
+    alert("가게 이름을 입력해주세요.");
+    return;
+  }
+  if (!categoryId) {
+    alert("카테고리를 선택해주세요.");
+    return;
+  }
+  if (!phone) {
+    alert("전화번호를 입력해주세요.");
+    return;
+  }
+  if (!minprice) {
+    alert("최소주문금액을 입력해주세요.");
+    return;
+  }
+  if (!operationTime) {
+    alert("운영시간을 입력해주세요.");
+    return;
+  }
+  if (!closedDay) {
+    alert("휴무일을 입력해주세요.");
+    return;
+  }
+  if (selectedPayments.length === 0) {
+    alert("최소 1개 이상의 지불방식을 선택해주세요.");
+    return;
+  }
+
+  if (!owner) {
+    alert("로그인이 필요합니다.");
+    window.location.href = '/users/firstpage';
+    return;
+  }
+
+  try {
+    let response;
+    if (myStoreId) {
+      // 가게 정보 수정
+      response = await fetch(`/stores/${myStoreId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          category_id: parseInt(categoryId),
+          store_name: name,
+          phone: phone,
+          minprice: minprice,
+          operationTime: operationTime,
+          closedDay: closedDay,
+          payment_ids: selectedPayments,  // 여러 개의 지불방식 ID 배열
+          information: description  // 가게 정보 추가
+        })
+      });
+    } else {
+      // 새 가게 등록
+      // category_id만 보내고, 백엔드에서 Category 테이블에서 확인하여 category 필드에 자동으로 채움
+      response = await fetch('/stores/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          category_id: parseInt(categoryId),
+          store_name: name,
+          phone: phone,
+          minprice: minprice,
+          operationTime: operationTime,
+          closedDay: closedDay,
+          payment_ids: selectedPayments,  // 여러 개의 지불방식 ID 배열
+          information: description  // 가게 정보 추가
+        })
+      });
+    }
+
+    if (response.ok) {
+      const data = await response.json();
+      alert("가게 정보가 저장되었습니다!");
+      // 메인 페이지로 이동
+      window.location.href = '/customer/main';
+    } else {
+      const data = await response.json();
+      alert(data.error || "가게 정보 저장에 실패했습니다.");
+    }
+  } catch (error) {
+    console.error('가게 저장 오류:', error);
+    alert("가게 정보 저장 중 오류가 발생했습니다.");
+  }
+}
+</script>
+
+</body>
+</html>

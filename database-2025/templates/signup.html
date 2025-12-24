@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원가입</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Jua', sans-serif;
+      background: linear-gradient(135deg, #ffffff 0%, #f0f9f9 100%);
+    }
+
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .page-title {
+      font-size: 40px;
+      font-family: 'Black Han Sans', sans-serif;
+      color: #2d3436;
+      margin-bottom: 40px;
+    }
+
+    .signup-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .input-label {
+      font-size: 16px;
+      font-weight: bold;
+      color: #2d3436;
+    }
+
+    .input-field {
+      padding: 14px 16px;
+      font-size: 16px;
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      flex: 1;
+      transition: 0.3s;
+    }
+
+    .input-field:focus {
+      border-color: #00d2be;
+      box-shadow: 0 0 0 3px rgba(0, 210, 190, 0.15);
+      outline: none;
+    }
+
+    .input-field::placeholder {
+      color: #adb5bd;
+    }
+
+    .check-btn {
+      padding: 14px 18px;
+      font-size: 14px;
+      font-weight: bold;
+      background: #6c757d;
+      color: white;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+      white-space: nowrap;
+    }
+
+    .check-btn:hover {
+      background: #5a6268;
+      transform: translateY(-2px);
+    }
+
+    .validation-message {
+      font-size: 13px;
+      min-height: 18px;
+    }
+
+    .validation-message.success {
+      color: #00d2be;
+    }
+
+    .validation-message.error {
+      color: #e74c3c;
+    }
+
+    .btn-signup {
+      padding: 18px 40px;
+      font-size: 20px;
+      font-weight: bold;
+      background: #00d2be;
+      color: white;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    .btn-signup:hover {
+      background: #00b8a6;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 210, 190, 0.25);
+    }
+
+    .back-btn {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 4px;
+    transition: 0.2s;
+  }
+
+  .back-btn:hover {
+    transform: scale(1.1);
+  }
+
+  </style>
+</head>
+
+<body>
+<div class="container">
+  <button class="back-btn" id="backBtn">←</button>
+  <h1 class="page-title">회원가입</h1>
+
+  <form class="signup-form" id="signupForm">
+
+    <div class="input-group">
+      <label class="input-label">이름</label>
+      <input type="text" id="userName" class="input-field" placeholder="이름을 입력하세요" required>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">아이디</label>
+      <div class="input-row">
+        <input type="text" id="userId" class="input-field" placeholder="아이디를 입력하세요" required>
+        <button type="button" class="check-btn" id="checkDuplicateBtn">중복확인</button>
+      </div>
+      <div id="idValidationMessage" class="validation-message"></div>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">비밀번호</label>
+      <input type="password" id="userPassword" class="input-field" placeholder="비밀번호를 입력하세요" required>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">이메일</label>
+      <input type="email" id="userEmail" class="input-field" placeholder="이메일을 입력하세요" required>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">전화번호</label>
+      <input type="text" id="userPhone" class="input-field" placeholder="010-1234-5678" required>
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">주소</label>
+      <input type="text" id="userAddress" class="input-field" placeholder="주소를 입력하세요" required>
+    </div>
+
+    <button type="submit" class="btn-signup">회원가입</button>
+  </form>
+</div>
+
+<script>
+// 중복 확인 상태 추적
+let isIdChecked = false;
+let checkedUserId = "";
+
+/* ==========================
+    아이디 중복확인
+========================== */
+document.getElementById("checkDuplicateBtn").addEventListener("click", async () => {
+  const userId = document.getElementById("userId").value.trim();
+  const msg = document.getElementById("idValidationMessage");
+
+  if (!userId) {
+    msg.textContent = "아이디를 입력하세요.";
+    msg.className = "validation-message error";
+    isIdChecked = false;
+    return;
+  }
+
+  // 백엔드 API로 아이디 중복 확인
+  msg.textContent = "중복 확인 중...";
+  msg.className = "validation-message";
+  
+  try {
+    const response = await fetch("/users/check-id", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ user_id: userId })
+    });
+
+    const data = await response.json();
+
+    if (data.available) {
+      msg.textContent = data.message || "사용 가능한 아이디입니다!";
+      msg.className = "validation-message success";
+      isIdChecked = true;
+      checkedUserId = userId; // 확인한 아이디 저장
+    } else {
+      msg.textContent = data.message || "이미 존재하는 아이디입니다.";
+      msg.className = "validation-message error";
+      isIdChecked = false;
+    }
+  } catch (error) {
+    console.error("중복 확인 오류:", error);
+    msg.textContent = "중복 확인 중 오류가 발생했습니다.";
+    msg.className = "validation-message error";
+    isIdChecked = false;
+  }
+});
+
+// 아이디 입력 필드 변경 시 중복 확인 상태 리셋
+document.getElementById("userId").addEventListener("input", () => {
+  const currentUserId = document.getElementById("userId").value.trim();
+  // 아이디가 변경되었거나 비어있으면 중복 확인 상태 리셋
+  if (currentUserId !== checkedUserId || !currentUserId) {
+    isIdChecked = false;
+    checkedUserId = "";
+    const msg = document.getElementById("idValidationMessage");
+    msg.textContent = "";
+    msg.className = "validation-message";
+  }
+});
+
+
+/* ==========================
+    회원가입 처리
+========================== */
+document.getElementById("signupForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("userName").value;
+  const userId = document.getElementById("userId").value.trim();
+  const password = document.getElementById("userPassword").value;
+  const email = document.getElementById("userEmail").value;
+  const address = document.getElementById("userAddress").value;
+  const msg = document.getElementById("idValidationMessage");
+
+  // 아이디 중복 확인 체크
+  if (!isIdChecked || checkedUserId !== userId) {
+    msg.textContent = "아이디 중복 확인을 해주세요.";
+    msg.className = "validation-message error";
+    alert("아이디 중복 확인을 해주세요.");
+    return;
+  }
+
+  // 백엔드 API로 회원가입 요청
+  try {
+    const response = await fetch("/users/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        passwd: password,
+        email: email,
+        name: name,
+        address: address
+      })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert("회원가입이 완료되었습니다!");
+      // 로그인 페이지로 이동
+      window.location.href = "/users/firstpage";
+    } else {
+      alert(data.error || "회원가입에 실패했습니다.");
+    }
+  } catch (error) {
+    console.error("회원가입 오류:", error);
+    alert("회원가입 중 오류가 발생했습니다.");
+  }
+});
+
+// 뒤로가기 → 로그인 페이지 이동
+document.getElementById("backBtn").addEventListener("click", () => {
+  window.location.href = "/users/firstpage";
+});
+
+
+</script>
+
+</body>
+</html>

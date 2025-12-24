@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>장바구니</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Jua', sans-serif;
+      background-color: #f8f9fa;
+    }
+
+    .app-container {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 상단바 */
+    .top-bar {
+      padding: 16px 20px;
+      background: #fff;
+      border-bottom: 2px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .back-btn {
+      border: none;
+      background: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    /* 메인 */
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      padding-bottom: 120px;
+    }
+
+    /* 빈 장바구니 */
+    .empty-cart {
+      text-align: center;
+      padding: 80px 20px;
+      color: #aaa;
+      font-size: 18px;
+    }
+
+    /* 장바구니 아이템 */
+    .cart-section {
+      margin-bottom: 24px;
+    }
+
+    .store-header {
+      font-size: 18px;
+      font-weight: bold;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #eee;
+      margin-bottom: 12px;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      background: #f8f9fa;
+      padding: 16px;
+      border-radius: 10px;
+      border: 2px solid #e6e6e6;
+      margin-bottom: 12px;
+    }
+
+    .item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .item-name {
+      font-size: 17px;
+      font-weight: bold;
+    }
+
+    .item-price {
+      color: #00d2be;
+      font-weight: bold;
+    }
+
+    .item-controls {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .quantity-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 2px solid #ddd;
+      padding: 4px 10px;
+      background: #fff;
+      border-radius: 20px;
+    }
+
+    .qty-btn {
+      border: none;
+      background: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #00d2be;
+    }
+
+    .delete-btn {
+      border: none;
+      background: none;
+      font-size: 20px;
+      color: #e63946;
+      cursor: pointer;
+    }
+
+    /* 하단 주문 섹션 */
+    .order-section {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: #fff;
+      border-top: 2px solid #eee;
+      padding: 20px;
+    }
+
+    .total-section {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .order-btn {
+      width: 100%;
+      padding: 18px;
+      font-size: 18px;
+      font-family: 'Jua', sans-serif;
+      background: #00d2be;
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app-container">
+
+  <!-- 상단바 -->
+  <header class="top-bar">
+    <button class="back-btn" id="backBtn">←</button>
+    <h1 class="page-title">장바구니</h1>
+    <div style="width:24px;"></div>
+  </header>
+
+  <!-- 메인 -->
+  <main class="main-content">
+    <div id="emptyCart" class="empty-cart" style="display:none;">
+      장바구니가 비었습니다.
+    </div>
+
+    <div id="cartItems"></div>
+  </main>
+
+  <!-- 하단 -->
+  <div id="orderSection" class="order-section" style="display:none;">
+    <div class="total-section">
+      <span>총 금액</span>
+      <span id="totalPrice">0원</span>
+    </div>
+    <button class="order-btn" id="orderBtn">주문하기</button>
+  </div>
+</div>
+
+
+<script>
+  // ==========================
+  // 장바구니 불러오기
+  // ==========================
+  function loadCart() {
+    const saved = localStorage.getItem("cart");
+    let cart = [];
+
+    if (saved) {
+      try {
+        cart = JSON.parse(saved);
+        if (!Array.isArray(cart)) cart = [];
+      } catch (e) {
+        cart = [];
+      }
+    }
+
+    // 장바구니에 id가 없다면 자동 생성
+    cart = cart.map(item => {
+      if (!item._id) {
+        item._id = Date.now() + Math.random();
+      }
+      return item;
+    });
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    return cart;
+  }
+
+
+  // ==========================
+  // 장바구니 렌더링
+  // ==========================
+  function renderCart() {
+    const cart = loadCart();
+
+    const emptyCart = document.getElementById("emptyCart");
+    const cartItems = document.getElementById("cartItems");
+    const orderSection = document.getElementById("orderSection");
+
+    if (cart.length === 0) {
+      emptyCart.style.display = "block";
+      cartItems.innerHTML = "";
+      orderSection.style.display = "none";
+      return;
+    }
+
+    emptyCart.style.display = "none";
+    orderSection.style.display = "block";
+
+    // 가게별 그룹화
+    const grouped = {};
+    cart.forEach(item => {
+      if (!grouped[item.storeName]) grouped[item.storeName] = [];
+      grouped[item.storeName].push(item);
+    });
+
+    cartItems.innerHTML = "";
+
+    Object.keys(grouped).forEach(storeName => {
+      const section = document.createElement("div");
+      section.className = "cart-section";
+
+      const header = document.createElement("div");
+      header.className = "store-header";
+      header.textContent = storeName;
+
+      section.appendChild(header);
+
+      grouped[storeName].forEach(item => {
+        const div = document.createElement("div");
+        div.className = "cart-item";
+
+        div.innerHTML = `
+          <div class="item-info">
+            <div class="item-name">${item.menuName}</div>
+            <div class="item-price">${(item.price * item.quantity).toLocaleString()}원</div>
+          </div>
+
+          <div class="item-controls">
+            <div class="quantity-control">
+              <button class="qty-btn minus" data-id="${item._id}">-</button>
+              <span>${item.quantity}</span>
+              <button class="qty-btn plus" data-id="${item._id}">+</button>
+            </div>
+
+            <button class="delete-btn" data-id="${item._id}">🗑️</button>
+          </div>
+        `;
+
+        section.appendChild(div);
+      });
+
+      cartItems.appendChild(section);
+    });
+
+    bindEvents();
+    updateTotal();
+  }
+
+
+  // ==========================
+  // 이벤트 바인딩 (수량/삭제)
+  // ==========================
+  function bindEvents() {
+    document.querySelectorAll(".plus").forEach(btn => {
+      btn.onclick = () => changeQty(btn.dataset.id, 1);
+    });
+
+    document.querySelectorAll(".minus").forEach(btn => {
+      btn.onclick = () => changeQty(btn.dataset.id, -1);
+    });
+
+    document.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.onclick = () => deleteItem(btn.dataset.id);
+    });
+  }
+
+  function changeQty(id, diff) {
+    const cart = loadCart();
+    const item = cart.find(i => i._id == id);
+    if (!item) return;
+
+    item.quantity += diff;
+    if (item.quantity <= 0) {
+      deleteItem(id);
+      return;
+    }
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    renderCart();
+  }
+
+  function deleteItem(id) {
+    let cart = loadCart();
+    cart = cart.filter(i => i._id != id);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    renderCart();
+  }
+
+  function updateTotal() {
+    const cart = loadCart();
+    const total = cart.reduce((t, i) => t + i.price * i.quantity, 0);
+    document.getElementById("totalPrice").textContent = total.toLocaleString() + "원";
+  }
+
+  // 장바구니 페이지 뒤로가기 버튼
+  const backBtn = document.getElementById("backBtn");
+  if (backBtn) {
+    backBtn.addEventListener("click", () => {
+      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+      if (cart.length > 0 && cart[0].storeId) {
+        // 가게 상세 페이지로 이동
+        const storeId = cart[0].storeId;
+        window.location.href = `/stores/${storeId}/detail`;
+      } else {
+        // 장바구니 비어 있으면 메인 페이지로 이동
+        window.location.href = "/customer/main";
+      }
+    });
+  }
+
+  // ==========================
+  // 주문 버튼
+  // ==========================
+  document.getElementById("orderBtn").onclick = async () => {
+    const cart = loadCart();
+    if (cart.length === 0) {
+      alert("장바구니가 비어있습니다.");
+      return;
+    }
+    
+    // 가게 정보 가져오기 (minprice 확인용)
+    const storeId = cart[0].storeId;
+    let storeMinprice = 0;
+    try {
+      const storeRes = await fetch(`/stores/${storeId}`);
+      if (storeRes.ok) {
+        const store = await storeRes.json();
+        // minprice에서 "원" 제거하고 숫자로 변환
+        const minpriceStr = store.minprice ? store.minprice.replace(/원/g, '').replace(/,/g, '') : '0';
+        storeMinprice = parseInt(minpriceStr) || 0;
+      }
+    } catch (e) {
+      console.error('가게 정보 조회 실패');
+    }
+    
+    // 총 금액 계산
+    const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    // 최소주문금액 확인
+    if (storeMinprice > 0 && totalPrice < storeMinprice) {
+      alert(`최소주문금액이 부족합니다.\n최소주문금액: ${storeMinprice.toLocaleString()}원\n현재 금액: ${totalPrice.toLocaleString()}원`);
+      return;
+    }
+    
+    // 주문 페이지로 이동 (store_id 전달)
+    window.location.href = `/customer/order?store_id=${storeId}`;
+  };
+
+  // 초기 렌더링
+  renderCart();
+</script>
+
+</body>
+</html>
+

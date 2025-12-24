@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>주문내역</title>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Jua&display=swap");
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Jua", sans-serif;
+        background-color: #f8f9fa;
+      }
+
+      .app-container {
+        display: flex;
+        flex-direction: column;
+        max-width: 480px;
+        margin: 0 auto;
+        min-height: 100vh;
+        background-color: #ffffff;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      }
+
+      /* 상단바 */
+      .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 2px solid #f0f0f0;
+        background-color: #ffffff;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .back-btn {
+        border: none;
+        background: none;
+        font-size: 24px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .back-btn:hover {
+        transform: scale(1.1);
+      }
+
+      .page-title {
+        flex: 1;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        color: #2d3436;
+      }
+
+      .placeholder {
+        width: 40px;
+      }
+
+      /* 주문내역 리스트 */
+      .order-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px;
+      }
+
+      .order-item {
+        padding: 16px;
+        background-color: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+      }
+
+      .order-item:hover {
+        border-color: #00d2be;
+        box-shadow: 0 4px 12px rgba(0, 210, 190, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .order-store {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2d3436;
+      }
+
+      .order-date {
+        font-size: 14px;
+        color: #6c757d;
+      }
+
+      .order-menu {
+        font-size: 15px;
+        color: #2d3436;
+        margin-top: 4px;
+      }
+
+      .empty-msg {
+        text-align: center;
+        color: #adb5bd;
+        font-size: 18px;
+        margin-top: 100px;
+      }
+
+      /* 하단바 (기존 main.html, storelist2.html 동일 스타일) */
+      .bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 480px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 0;
+        background-color: #ffffff;
+        border-top: 2px solid #f0f0f0;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      .nav-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: "Jua", sans-serif;
+        font-size: 15px;
+        color: #6c757d;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: color 0.2s;
+      }
+
+      .nav-btn:hover {
+        color: #00d2be;
+      }
+
+      .nav-btn.active {
+        color: #00d2be;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app-container">
+      <!-- 상단바 -->
+      <header class="top-bar">
+        <button class="back-btn" onclick="window.location.href='/customer/main'">←</button>
+        <h1 class="page-title">주문내역</h1>
+        <div class="placeholder"></div>
+      </header>
+
+      <!-- 주문내역 리스트 -->
+      <main class="order-list" id="orderList"></main>
+      <p class="empty-msg" id="emptyMsg" style="display: none">
+        주문내역이 없습니다 😢
+      </p>
+
+      <!-- 하단 네비게이션 -->
+      <nav class="bottom-bar">
+        <button class="nav-btn" onclick="window.location.href='/customer/main'">
+          🏠<span>홈</span>
+        </button>
+        <button
+          class="nav-btn active"
+          onclick="window.location.href='/customer/orderlist'"
+        >
+          📦<span>주문내역</span>
+        </button>
+        <button
+          class="nav-btn"
+          onclick="window.location.href='/users/setting'"
+        >
+          ⚙️<span>설정</span>
+        </button>
+      </nav>
+    </div>
+
+    <script>
+      // ================================
+      // [1] 백엔드 API에서 주문 내역 불러오기
+      // ================================
+      async function loadOrderHistory() {
+        const list = document.getElementById("orderList");
+        const emptyMsg = document.getElementById("emptyMsg");
+
+        try {
+          const response = await fetch('/customer/orders');
+          
+          if (!response.ok) {
+            if (response.status === 401) {
+              alert('로그인이 필요합니다.');
+              window.location.href = '/users/firstpage';
+              return;
+            }
+            throw new Error('주문 내역을 불러오는데 실패했습니다.');
+          }
+
+          const orders = await response.json();
+          list.innerHTML = "";
+
+          if (orders.length === 0) {
+            emptyMsg.style.display = "block";
+            return;
+          } else {
+            emptyMsg.style.display = "none";
+          }
+
+          // 렌더링
+          orders.forEach((order) => {
+            const item = document.createElement("div");
+            item.className = "order-item";
+            
+            // 주문 날짜 포맷팅
+            const orderDate = new Date(order.created_at).toLocaleDateString('ko-KR');
+
+            item.innerHTML = `
+              <div class="order-header">
+                <span class="order-store">${order.store_name || '가게명 없음'}</span>
+                <span class="order-date">${orderDate}</span>
+              </div>
+              <div class="order-menu">${order.order || '주문 내용 없음'}</div>
+              <div class="order-price">${order.total_price?.toLocaleString() || 0}원</div>
+            `;
+
+            list.appendChild(item);
+          });
+        } catch (error) {
+          console.error('주문 내역 로드 오류:', error);
+          emptyMsg.style.display = "block";
+          emptyMsg.textContent = "주문 내역을 불러오는 중 오류가 발생했습니다.";
+        }
+      }
+
+      loadOrderHistory();
+
+      // ================================
+      // [3] FastAPI 연결 시 변경할 부분
+      // ================================
+      /*
+        🔹 [GET /api/orders?username={username}]
+            → 현재 로그인 사용자 주문내역 조회
+            예시:
+
+            async function loadOrderHistoryFromAPI() {
+              const response = await fetch(`/api/orders?username=${currentUser}`);
+              const data = await response.json();
+              renderOrders(data);
+            }
+
+            백엔드에서는 예를 들어 이런 형태로 응답:
+            [
+              {
+                "username": "taewon",
+                "storeName": "맛있는 한식당",
+                "date": "2025-11-12",
+                "menuList": [
+                  {"name": "김치찌개", "quantity": 1},
+                  {"name": "비빔밥", "quantity": 2}
+                ]
+              }
+            ]
+      */
+    </script>
+  </body>
+</html>

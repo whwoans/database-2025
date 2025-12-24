@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가게 상세</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; padding: 0;
+  font-family: 'Jua', sans-serif;
+  background-color: #f8f9fa;
+}
+
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
+/* 상단바 */
+.top-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px;
+  border-bottom: 2px solid #f0f0f0;
+  background-color: #ffffff;
+  position: sticky; top: 0;
+  z-index: 10;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  font-size: 24px;
+  transition: transform 0.2s;
+}
+
+.back-btn:hover {
+  transform: scale(1.1);
+}
+
+.app-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2d3436;
+}
+
+.top-icons {
+  display: flex;
+  gap: 16px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  font-size: 24px;
+  transition: transform 0.2s;
+}
+
+.icon-btn:hover { transform: scale(1.1); }
+
+/* 제목 + 찜 버튼 */
+.store-title-row {
+  padding: 20px;
+  border-bottom: 2px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.store-name {
+  font-size: 24px;
+  color: #2d3436;
+}
+
+.like-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.like-toggle-btn.active svg path {
+  fill: #ff6b81;
+  stroke: #ff6b81;
+}
+
+/* 탭 */
+.tab-menu {
+  display: flex;
+  border-bottom: 2px solid #e9ecef;
+  background-color: #ffffff;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 14px;
+  background: none;
+  border: none;
+  color: #6c757d;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  border-bottom: 3px solid #00d2be;
+  color: #00d2be;
+  font-weight: bold;
+}
+
+.section {
+  display: none;
+  padding: 20px;
+}
+.section.active { display: block; }
+
+/* 메뉴 */
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  background-color: #ffffff;
+  margin-bottom: 14px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.menu-item:hover {
+  border-color: #00d2be;
+  box-shadow: 0 4px 12px rgba(0,210,190,0.2);
+}
+.menu-name { font-size: 17px; color: #2d3436; font-weight: bold; }
+.menu-price { font-size: 17px; color: #00d2be; }
+
+/* 리뷰 */
+.review-box {
+  padding: 12px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+.review-user { font-size: 15px; font-weight: bold; color: #2d3436; }
+.review-text { margin-top: 4px; font-size: 14px; color: #6c757d; }
+
+.info-text {
+  font-size: 15px; color: #6c757d;
+  line-height: 1.5; margin: 4px 0;
+}
+</style>
+</head>
+
+<body>
+<div class="app-container">
+
+<header class="top-bar">
+  <button class="back-btn" id="backBtn" aria-label="뒤로가기">←</button>
+  <h1 class="app-title">맛집 DB</h1>
+  <div class="top-icons">
+    <button class="icon-btn" id="favoriteBtn">❤️</button>
+    <button class="icon-btn" id="cartBtn">🛒</button>
+  </div>
+</header>
+
+<div class="store-title-row">
+  <h2 class="store-name" id="storeName">가게명</h2>
+  <button class="like-toggle-btn" id="likeToggleBtn">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+         stroke="#adb5bd" stroke-width="2">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 
+          0L12 5.67l-1.06-1.06a5.5 5.5 0 0 
+          0-7.78 7.78l1.06 1.06L12 
+          21.23l7.78-7.78 1.06-1.06a5.5 
+          5.5 0 0 0 0-7.78z"></path>
+    </svg>
+  </button>
+</div>
+
+<div class="tab-menu">
+  <button class="tab-btn active" data-tab="menu">메뉴</button>
+  <button class="tab-btn" data-tab="info">가게정보</button>
+  <button class="tab-btn" data-tab="review">리뷰</button>
+</div>
+
+<!-- 메뉴 섹션 -->
+<div class="section active" id="section-menu"></div>
+
+<!-- 정보 섹션 -->
+<div class="section" id="section-info">
+  <p class="info-text" id="info-desc"></p>
+  <p class="info-text">📞 전화번호: <span id="info-phone"></span></p>
+  <p class="info-text">🕐 운영시간: <span id="info-operationTime"></span></p>
+  <p class="info-text">📅 휴무일: <span id="info-closedDay"></span></p>
+  <p class="info-text" id="info-information" style="display:none; white-space: pre-wrap; line-height: 1.6; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e9ecef;"></p>
+  <p class="info-text">⭐ 평점: <span id="info-rating"></span></p>
+  <p class="info-text">💬 리뷰 수: <span id="info-reviews"></span></p>
+  <p class="info-text">📦 주문 수: <span id="info-orders"></span></p>
+</div>
+
+<!-- 리뷰 섹션 -->
+<div class="section" id="section-review"></div>
+
+</div>
+
+<script>
+// ---------- URL storeId ----------
+// 라우터에서 전달된 store_id 사용
+{% if store_id is defined %}
+var storeId = {{ store_id }};
+{% else %}
+var storeId = parseInt(new URLSearchParams(location.search).get("id")) || 1;
+{% endif %}
+
+// ---------- 백엔드 API에서 가게 정보 불러오기 ----------
+var storeData = null;
+
+async function loadStoreData() {
+  try {
+    // 가게 정보 조회
+    const storeRes = await fetch(`/stores/${storeId}`);
+    const store = await storeRes.json();
+    
+    // 메뉴 조회
+    const menuRes = await fetch(`/customer/stores/${storeId}/menus`);
+    const menus = await menuRes.json();
+    
+    // 리뷰 조회
+    const reviewRes = await fetch(`/reviews/store/${storeId}`);
+    const reviews = await reviewRes.json();
+    
+    // 찜 여부 확인
+    let isLiked = false;
+    try {
+      const favoritesRes = await fetch('/favorites');
+      if (favoritesRes.ok) {
+        const favorites = await favoritesRes.json();
+        isLiked = favorites.some(f => f.id === storeId);
+      }
+    } catch (e) {
+      console.log('찜 목록 조회 실패 (로그인 필요)');
+    }
+    
+    // minprice에서 "원" 제거 (이미 "원"이 포함되어 있을 수 있음)
+    const minpriceValue = store.minprice ? store.minprice.replace(/원/g, '') : '0';
+    
+    // 리뷰에서 평균 별점 계산 (백엔드에서 제공하지 않는 경우 대비)
+    let avgRating = 0;
+    if (reviews.length > 0) {
+      const sum = reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
+      avgRating = Math.round((sum / reviews.length) * 10) / 10; // 소수점 첫째자리까지
+    }
+    
+    storeData = {
+      id: store.id,
+      name: store.store_name,
+      description: `${minpriceValue}원 이상 주문 가능`,
+      phone: store.phone || '',
+      operationTime: store.operationTime || '',
+      closedDay: store.closedDay || '',
+      information: store.information || '',  // 가게 정보
+      rating: store.avgRating || avgRating,  // 백엔드에서 계산된 평균 별점 또는 프론트에서 계산
+      reviews: store.reviewCount || reviews.length,  // 실제 리뷰 수
+      orders: store.orderCount || 0,  // 백엔드에서 계산된 주문 수
+      menus: menus.map(m => ({ name: m.menu, price: m.price })),
+      reviewsList: reviews.map(r => ({
+        user: r.user_name || '익명',
+        rating: r.rating,
+        text: r.content || ''
+      })),
+      isLiked: isLiked
+    };
+    
+    // ---------- DOM 채우기 ----------
+    document.getElementById("storeName").textContent = storeData.name;
+    document.getElementById("info-desc").textContent = storeData.description;
+    document.getElementById("info-phone").textContent = storeData.phone || '등록되지 않음';
+    document.getElementById("info-operationTime").textContent = storeData.operationTime || '등록되지 않음';
+    document.getElementById("info-closedDay").textContent = storeData.closedDay || '등록되지 않음';
+    if (storeData.information) {
+      document.getElementById("info-information").textContent = storeData.information;
+      document.getElementById("info-information").style.display = "block";
+    } else {
+      document.getElementById("info-information").style.display = "none";
+    }
+    document.getElementById("info-rating").textContent = storeData.rating;
+    document.getElementById("info-reviews").textContent = storeData.reviews;
+    document.getElementById("info-orders").textContent = storeData.orders;
+    
+    // 메뉴 렌더링
+    renderMenus();
+    
+    // 리뷰 렌더링
+    renderReviews();
+    
+    // 찜 상태 업데이트
+    updateHeart(storeData.isLiked);
+    
+  } catch (error) {
+    console.error('가게 정보 로드 오류:', error);
+    alert('가게 정보를 불러오는 중 오류가 발생했습니다.');
+  }
+}
+
+loadStoreData();
+
+// ---------- 메뉴 렌더링 ----------
+function renderMenus() {
+  if (!storeData || !storeData.menus) return;
+  
+  var menuSection = document.getElementById("section-menu");
+  menuSection.innerHTML = "";
+  storeData.menus.forEach(m => {
+    var div = document.createElement("div");
+    div.className = "menu-item";
+    div.innerHTML = `
+      <span class="menu-name">${m.name}</span>
+      <span class="menu-price">${m.price.toLocaleString()}원</span>
+    `;
+
+    div.onclick = function () {
+      // 장바구니는 세션 또는 localStorage에 임시 저장 (주문 페이지에서 사용)
+      var cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+      // 다른 가게의 메뉴가 장바구니에 있으면 기존 장바구니 비우기
+      if (cart.length > 0 && cart[0].storeId !== storeData.id) {
+        if (confirm("다른 가게의 메뉴가 장바구니에 있습니다. 기존 장바구니를 비우고 새로 담으시겠습니까?")) {
+          cart = [];
+        } else {
+          return; // 사용자가 취소하면 장바구니에 추가하지 않음
+        }
+      }
+
+      var found = cart.find(i =>
+        i.storeId === storeData.id && i.menuName === m.name);
+
+      if (found) found.quantity++;
+      else {
+        cart.push({
+          storeId: storeData.id,
+          storeName: storeData.name,
+          menuName: m.name,
+          price: m.price,
+          quantity: 1,
+          _id: Date.now() + Math.random() // 고유 ID 추가
+        });
+      }
+
+      localStorage.setItem("cart", JSON.stringify(cart));
+      alert("장바구니에 담았습니다!");
+    };
+
+    menuSection.appendChild(div);
+  });
+}
+
+// ---------- 리뷰 렌더링 ----------
+function renderReviews() {
+  if (!storeData || !storeData.reviewsList) return;
+  
+  var reviewSection = document.getElementById("section-review");
+  reviewSection.innerHTML = "";
+  
+  if (storeData.reviewsList.length === 0) {
+    reviewSection.innerHTML = '<p style="text-align:center;padding:20px;color:#adb5bd;">리뷰가 없습니다.</p>';
+    return;
+  }
+  
+  storeData.reviewsList.forEach(r => {
+    var box = document.createElement("div");
+    box.className = "review-box";
+    box.innerHTML = `
+      <div class="review-user">⭐${r.rating} ${r.user}</div>
+      <div class="review-text">${r.text}</div>
+    `;
+    reviewSection.appendChild(box);
+  });
+}
+
+// ---------- 탭 전환 ----------
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", function () {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+
+    this.classList.add("active");
+    document.getElementById("section-" + this.dataset.tab).classList.add("active");
+  });
+});
+
+/* ============================================================
+   7) 찜 기능 - 백엔드 API 연동
+   ============================================================ */
+const likeBtn = document.getElementById("likeToggleBtn");
+const heartPath = likeBtn.querySelector("path");
+
+function updateHeart(active) {
+  if (active) {
+    likeBtn.classList.add("active");
+    heartPath.setAttribute("fill", "#ff6b81");
+    heartPath.setAttribute("stroke", "#ff6b81");
+  } else {
+    likeBtn.classList.remove("active");
+    heartPath.setAttribute("fill", "none");
+    heartPath.setAttribute("stroke", "#adb5bd");
+  }
+}
+
+// 찜 버튼 클릭 - 백엔드 API 호출
+likeBtn.onclick = async () => {
+  if (!storeData) return;
+  
+  try {
+    if (storeData.isLiked) {
+      // 찜 해제
+      const response = await fetch(`/favorites/${storeId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        storeData.isLiked = false;
+        updateHeart(false);
+        alert("찜 해제되었습니다.");
+      } else {
+        const data = await response.json();
+        alert(data.error || "찜 해제에 실패했습니다.");
+      }
+    } else {
+      // 찜 추가
+      const response = await fetch('/favorites', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          store_id: storeId
+        })
+      });
+      
+      if (response.ok) {
+        storeData.isLiked = true;
+        updateHeart(true);
+        alert("찜 추가되었습니다!");
+      } else {
+        const data = await response.json();
+        alert(data.error || "찜 추가에 실패했습니다.");
+      }
+    }
+  } catch (error) {
+    console.error('찜 기능 오류:', error);
+    alert("오류가 발생했습니다. 로그인이 필요할 수 있습니다.");
+  }
+};
+
+
+// ---------- 상단 버튼 ----------
+document.getElementById("favoriteBtn").onclick = () => location.href = "/favorites/page";
+document.getElementById("cartBtn").onclick = () => location.href = "/customer/cart";
+
+const backBtn = document.getElementById("backBtn");
+if (backBtn) {
+  backBtn.addEventListener("click", () => {
+    // 가게 목록 페이지로 이동
+    window.location.href = "/customer/storelist";
+  });
+}
+
+</script>
+
+</body>
+</html>

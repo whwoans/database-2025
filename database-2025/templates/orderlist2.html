@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>주문내역</title>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Jua&display=swap");
+
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Jua", sans-serif;
+        background-color: #f8f9fa;
+      }
+
+      .app-container {
+        display: flex;
+        flex-direction: column;
+        max-width: 480px;
+        margin: 0 auto;
+        min-height: 100vh;
+        background-color: #ffffff;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      }
+
+      /* 상단바 */
+      .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 2px solid #f0f0f0;
+        background-color: #ffffff;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .back-btn {
+        border: none;
+        background: none;
+        font-size: 24px;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .back-btn:hover {
+        transform: scale(1.1);
+      }
+
+      .page-title {
+        flex: 1;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        color: #2d3436;
+      }
+
+      .placeholder {
+        width: 40px;
+      }
+
+      /* 주문내역 리스트 */
+      .order-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px;
+        padding-bottom: 100px;
+      }
+
+      .order-item {
+        padding: 16px;
+        background-color: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+      }
+
+      .order-item:hover {
+        border-color: #00d2be;
+        box-shadow: 0 4px 12px rgba(0, 210, 190, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .order-store {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2d3436;
+      }
+
+      .order-date {
+        font-size: 14px;
+        color: #6c757d;
+      }
+
+      .order-menu {
+        font-size: 15px;
+        color: #2d3436;
+        margin-top: 4px;
+        margin-bottom: 8px;
+      }
+
+      .order-price {
+        font-size: 16px;
+        font-weight: bold;
+        color: #00d2be;
+        margin-top: 8px;
+      }
+
+      .order-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .review-btn {
+        padding: 8px 16px;
+        background-color: #00d2be;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-family: "Jua", sans-serif;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .review-btn:hover {
+        background-color: #00b8a3;
+        transform: translateY(-1px);
+      }
+
+      .review-btn:disabled {
+        background-color: #adb5bd;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .empty-msg {
+        text-align: center;
+        color: #adb5bd;
+        font-size: 18px;
+        margin-top: 100px;
+        padding: 20px;
+      }
+
+      /* 리뷰 작성 모달 */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-content {
+        background-color: white;
+        padding: 24px;
+        border-radius: 16px;
+        max-width: 400px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .modal-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #2d3436;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6c757d;
+      }
+
+      .rating-section {
+        margin-bottom: 20px;
+      }
+
+      .rating-label {
+        font-size: 16px;
+        margin-bottom: 12px;
+        color: #2d3436;
+      }
+
+      .star-rating {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+      }
+
+      .star {
+        font-size: 32px;
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+        display: inline-block;
+      }
+
+      .star.active,
+      .star.hover-active {
+        color: #ffc107;
+      }
+      
+      .star.active::before,
+      .star.hover-active::before {
+        content: '⭐';
+      }
+      
+      .star:not(.active):not(.hover-active)::before {
+        content: '☆';
+        color: #adb5bd;
+      }
+      
+      .star::before {
+        display: inline-block;
+      }
+
+      .star:hover {
+        transform: scale(1.1);
+      }
+
+      .review-content {
+        margin-bottom: 20px;
+      }
+
+      .review-textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-family: "Jua", sans-serif;
+        font-size: 14px;
+        resize: vertical;
+      }
+
+      .review-textarea:focus {
+        outline: none;
+        border-color: #00d2be;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 12px;
+      }
+
+      .submit-btn {
+        flex: 1;
+        padding: 12px;
+        background-color: #00d2be;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-family: "Jua", sans-serif;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .submit-btn:hover {
+        background-color: #00b8a3;
+      }
+
+      .cancel-btn {
+        flex: 1;
+        padding: 12px;
+        background-color: #e9ecef;
+        color: #2d3436;
+        border: none;
+        border-radius: 8px;
+        font-family: "Jua", sans-serif;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .cancel-btn:hover {
+        background-color: #dee2e6;
+      }
+
+      /* 하단바 */
+      .bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 480px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 0;
+        background-color: #ffffff;
+        border-top: 2px solid #f0f0f0;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      .nav-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: "Jua", sans-serif;
+        font-size: 15px;
+        color: #6c757d;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: color 0.2s;
+      }
+
+      .nav-btn:hover {
+        color: #00d2be;
+      }
+
+      .nav-btn.active {
+        color: #00d2be;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app-container">
+      <!-- 상단바 -->
+      <header class="top-bar">
+        <button class="back-btn" onclick="window.location.href='/customer/main'">←</button>
+        <h1 class="page-title">주문내역</h1>
+        <div class="placeholder"></div>
+      </header>
+
+      <!-- 주문내역 리스트 -->
+      <main class="order-list" id="orderList"></main>
+      <p class="empty-msg" id="emptyMsg" style="display: none">
+        주문내역이 없습니다 😢
+      </p>
+
+      <!-- 하단 네비게이션 -->
+      <nav class="bottom-bar">
+        <button class="nav-btn" onclick="window.location.href='/customer/main'">
+          🏠<span>홈</span>
+        </button>
+        <button
+          class="nav-btn active"
+          onclick="window.location.href='/customer/orderlist'"
+        >
+          📦<span>주문내역</span>
+        </button>
+        <button
+          class="nav-btn"
+          onclick="window.location.href='/users/setting'"
+        >
+          ⚙️<span>설정</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- 리뷰 작성 모달 -->
+    <div id="reviewModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">리뷰 작성</h2>
+          <button class="close-btn" onclick="closeReviewModal()">&times;</button>
+        </div>
+        <div class="rating-section">
+          <div class="rating-label">평점을 선택해주세요</div>
+          <div class="star-rating" id="starRating">
+            <span class="star" data-rating="1"></span>
+            <span class="star" data-rating="2"></span>
+            <span class="star" data-rating="3"></span>
+            <span class="star" data-rating="4"></span>
+            <span class="star" data-rating="5"></span>
+          </div>
+        </div>
+        <div class="review-content">
+          <label class="rating-label">리뷰 내용 (선택사항)</label>
+          <textarea 
+            id="reviewContent" 
+            class="review-textarea" 
+            placeholder="리뷰를 작성해주세요..."
+            maxlength="200"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="cancel-btn" onclick="closeReviewModal()">취소</button>
+          <button class="submit-btn" onclick="submitReview()">작성하기</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ================================
+      // [1] 백엔드 API에서 주문 내역 불러오기
+      // ================================
+      async function loadOrderHistory() {
+        const list = document.getElementById("orderList");
+        const emptyMsg = document.getElementById("emptyMsg");
+
+        try {
+          const response = await fetch('/customer/orders');
+          
+          if (!response.ok) {
+            if (response.status === 401) {
+              alert('로그인이 필요합니다.');
+              window.location.href = '/users/firstpage';
+              return;
+            }
+            throw new Error('주문 내역을 불러오는데 실패했습니다.');
+          }
+
+          const orders = await response.json();
+          list.innerHTML = "";
+
+          if (orders.length === 0) {
+            emptyMsg.style.display = "block";
+            return;
+          } else {
+            emptyMsg.style.display = "none";
+          }
+
+          // 렌더링
+          orders.forEach((order) => {
+            const item = document.createElement("div");
+            item.className = "order-item";
+            
+            // 주문 날짜 포맷팅
+            const orderDate = new Date(order.created_at || order.order_time).toLocaleDateString('ko-KR', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+
+            item.innerHTML = `
+              <div class="order-header">
+                <span class="order-store">${order.store_name || '가게명 없음'}</span>
+                <span class="order-date">${orderDate}</span>
+              </div>
+              <div class="order-menu">${order.order || '주문 내용 없음'}</div>
+              <div class="order-price">${(order.total_price || 0).toLocaleString()}원</div>
+              <div class="order-actions">
+                <button class="review-btn" 
+                        onclick="openReviewModal(${order.id}, ${order.store_id}, '${order.store_name || '가게명 없음'}')"
+                        ${order.has_review ? 'disabled' : ''}>
+                  ${order.has_review ? '리뷰 작성 완료' : '리뷰 작성'}
+                </button>
+              </div>
+            `;
+
+            list.appendChild(item);
+          });
+        } catch (error) {
+          console.error('주문 내역 로드 오류:', error);
+          emptyMsg.style.display = "block";
+          emptyMsg.textContent = "주문 내역을 불러오는 중 오류가 발생했습니다.";
+        }
+      }
+
+      loadOrderHistory();
+
+      // ================================
+      // 리뷰 작성 모달 관련
+      // ================================
+      let currentOrderId = null;
+      let currentStoreId = null;
+      let currentStoreName = '';
+      let selectedRating = 0;
+
+      function openReviewModal(orderId, storeId, storeName) {
+        currentOrderId = orderId;
+        currentStoreId = storeId;
+        currentStoreName = storeName;
+        selectedRating = 0;
+        
+        // 모달 초기화
+        document.getElementById('reviewContent').value = '';
+        
+        // 별점 초기화 - 모든 별의 active 클래스 제거
+        document.querySelectorAll('.star').forEach(star => {
+          star.classList.remove('active');
+        });
+        
+        // 모달 제목 업데이트
+        document.querySelector('.modal-title').textContent = `${storeName} 리뷰 작성`;
+        
+        // 모달 표시
+        document.getElementById('reviewModal').style.display = 'flex';
+      }
+
+      function closeReviewModal() {
+        document.getElementById('reviewModal').style.display = 'none';
+        currentOrderId = null;
+        currentStoreId = null;
+        currentStoreName = '';
+        selectedRating = 0;
+      }
+
+      // 별점 클릭 및 호버 이벤트
+      document.querySelectorAll('.star').forEach((star, index) => {
+        // 클릭 이벤트
+        star.addEventListener('click', function() {
+          const rating = parseInt(this.getAttribute('data-rating'));
+          selectedRating = rating;
+          
+          // 별점 표시 업데이트 (1부터 rating까지 활성화)
+          document.querySelectorAll('.star').forEach((s) => {
+            const starRating = parseInt(s.getAttribute('data-rating'));
+            if (starRating <= rating) {
+              s.classList.add('active');
+            } else {
+              s.classList.remove('active');
+            }
+          });
+        });
+
+        // 호버 이벤트 (마우스 올렸을 때만 미리보기)
+        star.addEventListener('mouseenter', function() {
+          const rating = parseInt(this.getAttribute('data-rating'));
+          
+          // 호버 시 미리보기 (선택된 별점은 유지하면서 호버한 별까지 미리보기)
+          document.querySelectorAll('.star').forEach((s) => {
+            const starRating = parseInt(s.getAttribute('data-rating'));
+            if (starRating <= rating) {
+              // 호버 중인 별까지 임시로 active 클래스 추가 (원래 active는 유지)
+              if (!s.classList.contains('active')) {
+                s.classList.add('hover-active');
+              }
+            } else {
+              s.classList.remove('hover-active');
+            }
+          });
+        });
+
+        star.addEventListener('mouseleave', function() {
+          // 호버 해제 시 hover-active 클래스 제거
+          document.querySelectorAll('.star').forEach((s) => {
+            s.classList.remove('hover-active');
+          });
+        });
+      });
+
+      // 모달 외부 클릭 시 닫기
+      document.getElementById('reviewModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeReviewModal();
+        }
+      });
+
+      // 리뷰 제출
+      async function submitReview() {
+        if (!selectedRating) {
+          alert('평점을 선택해주세요.');
+          return;
+        }
+
+        if (!currentStoreId) {
+          alert('가게 정보가 없습니다.');
+          return;
+        }
+
+        const content = document.getElementById('reviewContent').value.trim();
+
+        try {
+          const response = await fetch('/reviews', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              store_id: currentStoreId,
+              order_id: currentOrderId,  // 주문 ID 추가
+              rating: selectedRating,
+              content: content
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            alert('리뷰가 작성되었습니다!');
+            closeReviewModal();
+            // 주문 내역 새로고침
+            loadOrderHistory();
+          } else {
+            const error = await response.json();
+            alert(error.error || '리뷰 작성에 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('리뷰 작성 오류:', error);
+          alert('리뷰 작성 중 오류가 발생했습니다.');
+        }
+      }
+    </script>
+  </body>
+</html>
